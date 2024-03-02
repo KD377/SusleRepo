@@ -27,6 +27,16 @@ class SinusSignal:
         plt.show()
 
     @staticmethod
+    def create_sinus_histogram(amplitude, frequency, phase, bins, t1, d):
+        t = np.linspace(t1, t1 + d, 1000)
+        signal = SinusSignal.generate_sinus_signal(amplitude, frequency, phase, t)
+        bins_arr = np.linspace(-amplitude, amplitude, bins)
+
+        plt.hist(signal, bins_arr)
+        plt.grid()
+        plt.show()
+
+    @staticmethod
     def generate_sinus_signal_half(amplitude, frequency, phase, t):
         return amplitude/2 * (np.sin(2 * np.pi * frequency * t + phase) + abs(np.sin(2 * np.pi * frequency * t + phase)))
 
@@ -76,6 +86,15 @@ class UniformNoise:
         plt.grid(True)
         plt.show()
 
+    @staticmethod
+    def histogram(amplitude, t1, d, sampling_rate, bins):
+        uniform_noise = amplitude * (2 * np.random.rand(int(d * sampling_rate)) - 1)
+        bins_arr = np.linspace(-amplitude, amplitude, bins)
+
+        plt.hist(uniform_noise, bins_arr, edgecolor='black')
+        plt.grid()
+        plt.show()
+
 
 class GaussianNoise:
 
@@ -92,3 +111,11 @@ class GaussianNoise:
         plt.grid(True)
         plt.show()
 
+    @staticmethod
+    def histogram(amplitude, mean, dev, sampling_rate, bins):
+        noise = amplitude * np.random.normal(mean, dev, sampling_rate)
+        bins_arr = np.linspace(-amplitude, amplitude, bins)
+
+        plt.hist(noise, bins_arr, edgecolor='black')
+        plt.grid()
+        plt.show()
