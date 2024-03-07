@@ -1,26 +1,47 @@
-from SignalGenerator import *
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
-# SinusSignal.plot_sinus_signal(1, 1000, 0, 2, 2)
-# UniformNoise.plot_uniform_noise(1, 0, 1, 1000)
-# GaussianNoise.plot_gaussian_noise(2, 0, 1, 0, 2, 1000)
-# SinusSignal.plot_sinus_signal_full(1, 1000, 0, 2, 2)
-# SinusSignal.create_sinus_histogram(2, 1000, 0, 5, 0, 2)
-# UniformNoise.histogram(2, 0, 2, 1000, 10)
-# GaussianNoise.histogram(2, 0, 1, 1000, 20)
+from SignalGenerator import SinusSignal
 
 
-t1 = 0  # Początek zakresu
-d = 4  # Długość zakresu
-a = -1  # Amplituda
-t = 1  # Okres
-k = 0.25  # Wypełnienie
+class MyGUI(QMainWindow):
+    def __init__(self):
+        super(MyGUI, self).__init__()
+        uic.loadUi('form.ui', self)
+        self.show()
 
-# PROSTOKATNY
-signal = RectangularSignal(t1, d, a, t, k)
-signal.plot_signal()
-signal.plot_histogram()
+        self.figure = Figure(figsize=(5,3),dpi=100)
+        self.canvas = FigureCanvas(self.figure)
 
-# PROSTOKATNY SYMETRYCZNY
-symmetric_signal = RectangularSymmetricSignal(t1, d, a, t, k)
-symmetric_signal.plot_signal()
-symmetric_signal.plot_histogram()
+        self.gridLayout_3.addWidget(self.canvas)
+        self.pushButton.clicked.connect(self.generate_plot)
+
+    def generate_plot(self):
+        if self.comboBox.currentText() == "Sinus":
+            self.amplitude = float(self.lineEdit.text())
+            self.frequency = float(self.lineEdit_2.text())
+            self.t1 = float(self.lineEdit_3.text())
+            self.duration = float(self.lineEdit_4.text())
+            self.sinus = SinusSignal(amplitude=self.amplitude, frequency=self.frequency, phase=0,t1=self.t1, duration=self.duration,sampling_rate=1000)
+
+            t, signal = self.sinus.generate_sinus_signal()
+
+            self.figure.clear()
+            ax = self.figure.add_subplot(111)
+            ax.plot(t, signal)
+            ax.set_title('Sinusoidal Signal')
+            ax.set_xlabel('Time (seconds)')
+            ax.set_ylabel('Amplitude')
+            ax.grid(True)
+            self.canvas.draw()
+
+
+def main():
+    app = QApplication([])
+    window = MyGUI()
+    app.exec_()
+
+if __name__ == '__main__':
+    main()
