@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1318</width>
+    <height>873</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>781</width>
+     <width>961</width>
      <height>571</height>
     </rect>
    </property>
@@ -29,9 +29,9 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>230</y>
-         <width>571</width>
-         <height>291</height>
+         <y>180</y>
+         <width>601</width>
+         <height>371</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_3"/>
@@ -60,7 +60,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>PushButton</string>
+    <string>Generate signal</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -145,10 +145,20 @@
     </rect>
    </property>
   </widget>
+  <widget class="QLineEdit" name="lineEdit_5">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>50</y>
+     <width>121</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
   <widget class="QComboBox" name="comboBox">
    <property name="geometry">
     <rect>
-     <x>662</x>
+     <x>820</x>
      <y>50</y>
      <width>131</width>
      <height>32</height>
@@ -186,9 +196,45 @@
    </item>
    <item>
     <property name="text">
-     <string>Prostokatny symetryczny </string>
+     <string>Prostokatny_symetryczny</string>
     </property>
    </item>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>70</y>
+     <width>58</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>fulfillment</string>
+   </property>
+  </widget>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>996</x>
+     <y>19</y>
+     <width>251</width>
+     <height>561</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab_5">
+    <attribute name="title">
+     <string>Tab 1</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_6">
+    <attribute name="title">
+     <string>Tab 2</string>
+    </attribute>
+   </widget>
   </widget>
  </widget>
  <resources/>
