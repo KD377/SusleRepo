@@ -1,7 +1,51 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import square
+import struct
 
+def zapisz_do_pliku(nazwa_pliku, czas_poczatkowy, czestotliwosc_probkowania, sygnal, zespolony=False):
+    try:
+        with open(nazwa_pliku, 'wb') as f:
+            f.write(struct.pack('d', czas_poczatkowy))
+            f.write(struct.pack('d', czestotliwosc_probkowania))
+            f.write(struct.pack('?', zespolony))
+            f.write(struct.pack('i', len(sygnal)))
+            for probka in sygnal:
+                if zespolony:
+                    f.write(struct.pack('dd', probka.real, probka.imag))
+                else:
+                    f.write(struct.pack('d', probka))
+    except IOError as e:
+        print(f"Błąd przy zapisie do pliku: {e}")
+
+
+def odczyt_z_pliku(nazwa_pliku):
+    try:
+        with open(nazwa_pliku, 'rb') as f:
+            czas_poczatkowy = struct.unpack('d', f.read(8))[0]
+            czestotliwosc_probkowania = struct.unpack('d', f.read(8))[0]
+            zespolony = struct.unpack('?', f.read(1))[0]
+            liczba_probek = struct.unpack('i', f.read(4))[0]
+            sygnal = np.zeros(liczba_probek, dtype=np.complex if zespolony else np.float64)
+
+            for i in range(liczba_probek):
+                if zespolony:
+                    re, im = struct.unpack('dd', f.read(16))
+                    sygnal[i] = complex(re, im)
+                else:
+                    sygnal[i] = struct.unpack('d', f.read(8))[0]
+
+            return czas_poczatkowy, czestotliwosc_probkowania, sygnal, zespolony
+    except IOError as e:
+        print(f"Błąd przy odczycie z pliku: {e}")
+        return None
+
+def prezentuj_dane_tekstowo(czas_poczatkowy, czestotliwosc_probkowania, sygnal, zespolony):
+    print(f"Czas początkowy: {czas_poczatkowy}s, Częstotliwość próbkowania: {czestotliwosc_probkowania}Hz")
+    print(f"Rodzaj wartości: {'zespolone' if zespolony else 'rzeczywiste'}, Liczba próbek: {len(sygnal)}")
+    print("Pierwsze 10 próbek sygnału:")
+    for probka in sygnal[:10]:
+        print(probka)
 
 def operuj_na_sygnalach(syg1, syg2, operacja):
     # Generowanie sygnałów

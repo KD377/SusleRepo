@@ -18,6 +18,27 @@ class MyGUI(QMainWindow):
         self.gridLayout_3.addWidget(self.canvas)
         self.pushButton.clicked.connect(self.generate_plot)
 
+        self.histogramButton.clicked.connect(self.generate_histogram)
+        self.histogramBinsComboBox.addItems(["5", "10", "15", "20"])
+
+    def generate_histogram(self):
+        signal_type = self.comboBox.currentText()
+        bins = int(self.histogramBinsComboBox.currentText())  # Pobranie liczby przedziałów
+
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        if signal_type == "Sinus":
+            amplitude = float(self.lineEdit.text())
+            frequency = float(self.lineEdit_2.text())
+            t1 = float(self.lineEdit_3.text())
+            duration = float(self.lineEdit_4.text())
+            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
+                                sampling_rate=1000)
+            t, signal = sinus.generate_signal()
+            ax.hist(signal, bins=bins)
+        ax.set_title(f'Histogram dla {signal_type}')
+        self.canvas.draw()
+
     def generate_plot(self):
         signal_type = self.comboBox.currentText()
         self.figure.clear()
@@ -63,6 +84,7 @@ class MyGUI(QMainWindow):
         ax.grid(True)
         self.canvas.draw()
 
+
 def main():
     syg1 = SinusSignal(amplitude=1, frequency=1, phase=0, t1=0, duration=2, sampling_rate=1000)
     syg2 = RectangularSignal(range_start=0, range_length=2, amplitude=1, term=1, fulfillment=0.5)
@@ -71,6 +93,9 @@ def main():
     operuj_na_sygnalach(syg1, syg2, 'odejmowanie')
     operuj_na_sygnalach(syg1, syg2, 'mnożenie')
     operuj_na_sygnalach(syg1, syg2, 'dzielenie')
+
+
+
 
     app = QApplication([])
     window = MyGUI()
