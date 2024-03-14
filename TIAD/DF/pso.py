@@ -1,64 +1,58 @@
 import random
 import math
+import numpy as np
+
+def bunkin_function_n6(x):
+    return 100 * np.sqrt(np.abs(x[:, 1] - 0.01 * x[:, 0] ** 2)) + 0.01 * np.abs(x[:, 0] + 10)
 
 
-def bunkin_function_n6(x, y):
-    return 100 * math.sqrt(abs(y - 0.01 * x ** 2)) + 0.01 * abs(x + 10)
+def sphere_function(x):
+    return np.sum(x ** 2)
+
+def booth_function(x):
+    return (x[:, 0] + 2 * x[:, 1] - 7) ** 2 + (2 * x[:, 0] + x[:, 1] - 5) ** 2
 
 
-def booth_function(x, y):
-    return (x + 2 * y - 7) ** 2 + (2 * x + y - 5) ** 2
+class Particle:
+    def __init__(self, min_values, max_values, dimensions):
+        self.position = np.random.uniform(min_values, max_values, dimensions)
+        self.velocity = np.zeros(dimensions)
+        self.best_position = np.copy(self.position)
+        self.best_score = float('inf')
 
 
-class Czastka:
-    def __init__(self, min_x, max_x, min_y, max_y):
-        self.x = random.uniform(min_x, max_x)  # Losowa pozycja x
-        self.y = random.uniform(min_y, max_y)  # Losowa pozycja y
-        self.vx = 0  # Prędkość x
-        self.vy = 0  # Prędkość y
-        self.najlepsze_x = self.x  # Najlepsza znaleziona pozycja x
-        self.najlepsze_y = self.y  # Najlepsza znaleziona pozycja y
-        self.najlepszy_wynik = float('inf')  # Najlepszy wynik nieskonczonosc
+def pso(num_particles, num_iterations, min_values, max_values, dimensions, function, inertia_weight, cognitive_weight, social_weight):
+    global global_best_score, global_best_position
+
+    particles = [Particle(min_values, max_values, dimensions) for _ in range(num_particles)]
+    global_best_score = float('inf')
+
+    for _ in range(num_iterations):
+        for particle in particles:
+            score = function(np.expand_dims(particle.position, axis=0))
+            if score < particle.best_score:
+                particle.best_score = score
+                particle.best_position = np.copy(particle.position)
+
+            if score < global_best_score:
+                global_best_score = score
+                global_best_position = np.copy(particle.position)
+
+        for particle in particles:
+            particle.velocity = (particle.velocity * inertia_weight +
+                                 cognitive_weight * random.random() * (particle.best_position - particle.position) +
+                                 social_weight * random.random() * (global_best_position - particle.position))
+            particle.position += particle.velocity
+
+    return global_best_position, global_best_score
 
 
-# PSO
-def pso(liczba_czastek, liczba_iteracji, min_x, max_x, min_y, max_y, funkcja, waga_inercji, ws_poznawczy, ws_spoleczny):
-    global najlepszy_wynik_globalny, najlepsze_x_globalne, najlepsze_y_globalne
 
-    czastki = [Czastka(min_x, max_x, min_y, max_y) for _ in range(liczba_czastek)]
-    najlepszy_wynik_globalny = float('inf')
+num_particles = 75
+num_iterations = 1000
+dimensions = 20
 
-    for _ in range(liczba_iteracji):
-        for p in czastki:
-            wynik = funkcja(p.x, p.y)
-            if wynik < p.najlepszy_wynik:
-                p.najlepszy_wynik = wynik
-                p.najlepsze_x = p.x
-                p.najlepsze_y = p.y
-
-            if wynik < najlepszy_wynik_globalny:
-                najlepszy_wynik_globalny = wynik
-                najlepsze_x_globalne = p.x
-                najlepsze_y_globalne = p.y
-
-        for p in czastki:
-            p.vx = p.vx * waga_inercji + ws_poznawczy * random.random() * (p.najlepsze_x - p.x) + ws_spoleczny * random.random() * (
-                    najlepsze_x_globalne - p.x)
-            p.vy = p.vy * waga_inercji + ws_poznawczy * (p.najlepsze_y - p.y) + ws_spoleczny * random.random() * (
-                    najlepsze_y_globalne - p.y)
-            p.x = p.x + p.vx
-            p.y = p.y + p.vy
-
-    return najlepsze_x_globalne, najlepsze_y_globalne, najlepszy_wynik_globalny
-
-
-# Przykładowe użycie PSO
-liczba_czastek = 75
-liczba_iteracji = 100
-
-for i in range(3):
-    najlepsze_x, najlepsze_y, najlepszy_wynik = pso(liczba_czastek, liczba_iteracji, -15, -5, -3, 3, bunkin_function_n6, 0.5, 1, 1)
-    #najlepsze_x, najlepsze_y, najlepszy_wynik = pso(liczba_czastek, liczba_iteracji, -10, 10, -10, 10, booth_function, 0.5, 1, 1)
-    print(f"Najlepsze x: {najlepsze_x.__round__(4)}")
-    print(f"Najlepsze y: {najlepsze_y.__round__(4)}")
-    print(f"Najlepszy wynik: {najlepszy_wynik.__round__(4)}")
+for _ in range(3):
+    global_best_position, global_best_score = pso(num_particles, num_iterations, -100, 100, dimensions, sphere_function, 0.5, 1, 1)
+    print("Best position:", global_best_position)
+    print("Best score:", global_best_score)
