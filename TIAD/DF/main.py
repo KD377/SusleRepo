@@ -39,9 +39,9 @@ def differential_evolution(function, bounds, dimensions, population_size, max_it
 
         population = new_population
 
-        best_fitness = function(population[np.argmin([function(vector) for vector in population])])
-        if best_fitness < tolerance:
-            break
+        # best_fitness = function(population[np.argmin([function(vector) for vector in population])])
+        # if best_fitness < tolerance:
+        #     break
 
     best_individual = population[np.argmin([function(vector) for vector in population])]
 
@@ -50,7 +50,7 @@ def differential_evolution(function, bounds, dimensions, population_size, max_it
 
 bounds = (-100, 100)
 dimensions = 20
-population_size = 50
+population_size = 100
 max_iterations = 1000
 F = 0.5
 CR = 0.9
