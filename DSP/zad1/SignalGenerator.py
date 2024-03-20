@@ -85,12 +85,12 @@ class SinusSignal:
 
     def generate_half_wave_rectified_signal(self):
         t, signal = self.generate_signal()
-        signal_rectified = np.maximum(signal, 0)  # Zastąpienie wartości ujemnych zerami
+        signal_rectified = np.maximum(signal, 0)
         return t, signal_rectified
 
     def generate_full_wave_rectified_signal(self):
         t, signal = self.generate_signal()
-        signal_rectified = np.abs(signal)  # Zastosowanie wartości bezwzględnej do każdej wartości sygnału
+        signal_rectified = np.abs(signal)
         return t, signal_rectified
 
 

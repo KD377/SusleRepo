@@ -116,21 +116,21 @@ class MyGUI(QMainWindow):
                                 sampling_rate=1000)
             t, signal = sinus.generate_signal()
             ax.hist(signal, bins=bins)
-        elif signal_type == "Uniform":
+        elif signal_type == "Jednostajny":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             uniform = UniformNoise(amplitude=amplitude, t1=t1, duration=duration, sampling_rate=1000)
             t, signal = uniform.generate_signal()
             ax.hist(signal, bins=bins)
-        elif signal_type == "Gaussian":
+        elif signal_type == "Gaussowski":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             gaussian = GaussianNoise(amplitude=amplitude, mean=0, std_dev=1, t1=t1, duration=duration, sampling_rate=1000)
             t, signal = gaussian.generate_signal()
             ax.hist(signal, bins=bins)
-        elif signal_type == "Triangular":
+        elif signal_type == "Trojkatny":
             amplitude = float(self.lineEdit.text())
             term = float(self.lineEdit_2.text())
             range_start = float(self.lineEdit_3.text())
@@ -139,7 +139,7 @@ class MyGUI(QMainWindow):
             triangular = TriangleSignal(A=amplitude, T=term, t1=range_start, d=range_length, fulfillment=fulfillment)
             t, signal = triangular.generate_signal()
             ax.hist(signal, bins=bins)
-        elif signal_type == "Step":
+        elif signal_type == "Skok_jednostkowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -189,7 +189,7 @@ class MyGUI(QMainWindow):
             ax.plot(t, signal)
             ax.set_title('Sinus cały')
             ax.hist(signal, bins=bins)
-        elif signal_type == "Unit_Impulsive":
+        elif signal_type == "Impuls_jednostkowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -200,7 +200,7 @@ class MyGUI(QMainWindow):
             t, signal = unit_impulse.generate_signal()
             ax.hist(signal, bins=bins)
             ax.set_title('Impuls Jednostkowy')
-        elif signal_type == "Impulsive":
+        elif signal_type == "Szum_impulsowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -254,7 +254,7 @@ class MyGUI(QMainWindow):
             t, signal = rectangular_sym_signal.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał Prostokątny Symetryczny')
-        elif signal_type == "Uniform":
+        elif signal_type == "Jednostajny":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -263,7 +263,7 @@ class MyGUI(QMainWindow):
             t, signal = uniform.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Szum o rozkładzie jednostajnym')
-        elif signal_type == "Gaussian":
+        elif signal_type == "Gaussowski":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -272,7 +272,7 @@ class MyGUI(QMainWindow):
             t, signal = gaussian.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Szum gaussowski')
-        elif signal_type == "Triangular":
+        elif signal_type == "Trojkatny":
             amplitude = float(self.lineEdit.text())
             term = float(self.lineEdit_2.text())
             range_start = float(self.lineEdit_3.text())
@@ -282,7 +282,7 @@ class MyGUI(QMainWindow):
             t, signal = triangular.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał trójkątny')
-        elif signal_type == "Step":
+        elif signal_type == "Skok_jednostkowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -311,7 +311,7 @@ class MyGUI(QMainWindow):
             t, signal = sinus_pol.generate_full_wave_rectified_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał sinusoidalny wyprostowany dwupołówkowo')
-        elif signal_type == "Unit_Impulsive":
+        elif signal_type == "Impuls_jednostkowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -323,7 +323,7 @@ class MyGUI(QMainWindow):
             ax.stem(t, signal, linefmt='b-', markerfmt='bo',
                     basefmt='r-')
             ax.set_title('Impuls Jednostkowy')
-        elif signal_type == "Impulsive":
+        elif signal_type == "Szum_impulsowy":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
@@ -365,11 +365,6 @@ def oblicz_parametry_sygnalu(signal):
 
 
 def main():
-    syg1 = SinusSignal(amplitude=1, frequency=1, phase=0, t1=0, duration=2, sampling_rate=2000)
-    t1, probki_sygnalu1 = syg1.generate_signal()
-    syg2 = RectangularSignal(range_start=0, range_length=2, amplitude=1, term=1, fulfillment=0.5)
-    t2, probki_sygnalu2 = syg2.generate_signal()
-
     app = QApplication([])
     window = MyGUI()
     app.exec_()
