@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import square
 import struct
 
 def zapisz_do_pliku(nazwa_pliku, czas_poczatkowy, czestotliwosc_probkowania, sygnal, zespolony=False):
@@ -34,7 +33,6 @@ def odczyt_z_pliku(nazwa_pliku):
                     sygnal[i] = complex(re, im)
                 else:
                     sygnal[i] = struct.unpack('d', f.read(8))[0]
-
             return czas_poczatkowy, czestotliwosc_probkowania, sygnal, zespolony
     except IOError as e:
         print(f"Błąd przy odczycie z pliku: {e}")
@@ -47,48 +45,33 @@ def prezentuj_dane_tekstowo(czas_poczatkowy, czestotliwosc_probkowania, sygnal, 
     for probka in sygnal[:10]:
         print(probka)
 
-def operuj_na_sygnalach(syg1, syg2, operacja):
-    # Generowanie sygnałów
-    t1, signal1 = syg1.generate_signal()
-    t2, signal2 = syg2.generate_signal()
 
-    # Znalezienie wspólnego zakresu czasowego
-    t_start = max(t1[0], t2[0])
-    t_end = min(t1[-1], t2[-1])
-    # Wybór większego zbioru punktów czasowych jako bazy do interpolacji
-    if len(t1) > len(t2):
-        t_common = np.linspace(t_start, t_end, len(t1))
-    else:
-        t_common = np.linspace(t_start, t_end, len(t2))
-
-    # Interpolacja sygnałów do wspólnego zbioru punktów czasowych
-    signal1_interp = np.interp(t_common, t1, signal1)
-    signal2_interp = np.interp(t_common, t2, signal2)
-
-    # Wybór operacji
+def operuj_na_sygnalach(signal1, signal2, operacja):
     if operacja == 'dodawanie':
-        wynik = signal1_interp + signal2_interp
+        wynik = signal1 + signal2
     elif operacja == 'odejmowanie':
-        wynik = signal1_interp - signal2_interp
+        wynik = signal1 - signal2
     elif operacja == 'mnożenie':
-        wynik = signal1_interp * signal2_interp
+        wynik = signal1 * signal2
     elif operacja == 'dzielenie':
-        wynik = np.divide(signal1_interp, signal2_interp, out=np.zeros_like(signal1_interp), where=signal2_interp != 0)
+        wynik = np.divide(signal1, signal2, out=np.zeros_like(signal1), where=signal2 != 0)
     else:
         raise ValueError("Nieznana operacja.")
 
-    # Wyświetlanie wyniku
-    plt.plot(t_common, wynik)
+    t0 = 0
+    t = np.linspace(t0, t0 + len(signal1) / 1000, len(signal1))
+
+    plt.plot(t, wynik)
     plt.title(f'Wynik operacji: {operacja}')
     plt.xlabel('Czas')
     plt.ylabel('Amplituda')
     plt.grid(True)
     plt.show()
 
-    return t_common, wynik
+    return wynik
 
 class SinusSignal:
-    def __init__(self, amplitude, frequency, phase, t1, duration,sampling_rate):
+    def __init__(self, amplitude, frequency, phase, t1, duration, sampling_rate):
         self.amplitude = amplitude
         self.frequency = frequency
         self.phase = phase
@@ -97,80 +80,46 @@ class SinusSignal:
         self.sampling_rate = sampling_rate
 
     def generate_signal(self):
-        t = np.linspace(self.t1, self.t1 + self.duration, 1000)
+        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate))
         return t, self.amplitude * np.sin(2 * np.pi * self.frequency * t + self.phase)
 
+    def generate_half_wave_rectified_signal(self):
+        t, signal = self.generate_signal()
+        signal_rectified = np.maximum(signal, 0)  # Zastąpienie wartości ujemnych zerami
+        return t, signal_rectified
 
-    @staticmethod
-    def create_sinus_histogram(amplitude, frequency, phase, bins, t1, d):
-        t = np.linspace(t1, t1 + d, 1000)
-        signal = SinusSignal.generate_signal(amplitude, frequency, phase, t)
-        bins_arr = np.linspace(-amplitude, amplitude, bins)
-
-        plt.hist(signal, bins_arr)
-        plt.grid()
-        plt.show()
-
-    def generate_sinus_signal_half(self):
-        t = np.linspace(self.t1, self.t1 + self.duration, self.sampling_rate)
-        return t, self.amplitude / 2 * (np.sin(2 * np.pi * self.frequency * t + self.phase)
-                                + abs(np.sin(2 * np.pi * self.frequency * t + self.phase)))
-
-    def generate_sinus_signal_full(self):
-        t = np.linspace(self.t1, self.t1 + self.duration, self.sampling_rate)
-        return t, self.amplitude * abs(np.sin(2 * np.pi * self.frequency * t + self.phase))
+    def generate_full_wave_rectified_signal(self):
+        t, signal = self.generate_signal()
+        signal_rectified = np.abs(signal)  # Zastosowanie wartości bezwzględnej do każdej wartości sygnału
+        return t, signal_rectified
 
 
 class UniformNoise:
-
-    def __init__(self, amplitude, t1, d, sampling_rate):
+    def __init__(self, amplitude, t1, duration, sampling_rate):
         self.amplitude = amplitude
         self.t1 = t1
-        self.duration = d
+        self.duration = duration
         self.sampling_rate = sampling_rate
 
-    def plot_uniform_noise(self):
-        uniform_noise = self.amplitude * (2 * np.random.rand(int(self.duration * self.sampling_rate)) - 1)
-        t = np.linspace(self.t1, self.t1 + self.duration, len(uniform_noise))
-        return t, uniform_noise
-
-    @staticmethod
-    def histogram(amplitude, t1, d, sampling_rate, bins):
-        uniform_noise = amplitude * (2 * np.random.rand(int(d * sampling_rate)) - 1)
-        bins_arr = np.linspace(-amplitude, amplitude, bins)
-
-        plt.hist(uniform_noise, bins_arr, edgecolor='black')
-        plt.grid()
-        plt.show()
+    def generate_signal(self):
+        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate))
+        signal = self.amplitude * (2 * np.random.rand(len(t)) - 1)
+        return t, signal
 
 
 class GaussianNoise:
+    def __init__(self, amplitude, mean, std_dev, t1, duration, sampling_rate):
+        self.amplitude = amplitude
+        self.mean = mean
+        self.std_dev = std_dev
+        self.t1 = t1
+        self.duration = duration
+        self.sampling_rate = sampling_rate
 
-    @staticmethod
-    def plot_gaussian_noise(amplitude, mean, dev, t1, d, sampling_rate):
-        noise = amplitude * np.random.normal(mean, dev, sampling_rate)
-        t = np.linspace(t1, t1 + d, len(noise))
-
-        plt.plot(t, noise)
-        plt.title('Gaussian Noise')
-        plt.xlabel('Sample Index')
-        plt.ylabel('Amplitude')
-        plt.grid(True)
-        plt.show()
-
-    @staticmethod
-    def histogram(amplitude, mean, dev, sampling_rate, bins):
-        noise = amplitude * np.random.normal(mean, dev, sampling_rate)
-        bins_arr = np.linspace(-amplitude, amplitude, bins)
-
-        plt.hist(noise, bins_arr, edgecolor='black')
-        plt.grid()
-        plt.show()
-
-
-"""
-Sygnały susła poniżej
-"""
+    def generate_signal(self):
+        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate))
+        noise = self.amplitude * np.random.normal(self.mean, self.std_dev, len(t))
+        return t, noise
 
 
 class RectangularSignal:
@@ -192,23 +141,6 @@ class RectangularSignal:
         signal = np.array([self.value(ti) for ti in t])
         return t, signal
 
-    def plot_signal(self):
-        t, signal = self.generate_signal()
-        plt.plot(t, signal)
-        plt.title('Rectangular Signal')
-        plt.xlabel('Time')
-        plt.ylabel('Amplitude')
-        plt.grid(True)
-        plt.show()
-
-    def plot_histogram(self):
-        _, signal = self.generate_signal()
-        plt.hist(signal, bins='auto', edgecolor='black')
-        plt.title('Histogram of Rectangular Signal')
-        plt.xlabel('Amplitude')
-        plt.ylabel('Frequency')
-        plt.grid(True)
-        plt.show()
 
 class RectangularSymmetricSignal:
     def __init__(self, range_start, range_length, amplitude, term, fulfillment):
@@ -229,20 +161,74 @@ class RectangularSymmetricSignal:
         signal = np.array([self.value(ti) for ti in t])
         return t, signal
 
-    def plot_signal(self):
-        t, signal = self.generate_signal()
-        plt.plot(t, signal)
-        plt.title('Rectangular Symmetric Signal')
-        plt.xlabel('Time')
-        plt.ylabel('Amplitude')
-        plt.grid(True)
-        plt.show()
+class TriangleSignal:
+    def __init__(self, A, T, t1, d, fulfillment):
+        self.A = A
+        self.T = T
+        self.t1 = t1
+        self.d = d
+        self.fulfillment = fulfillment
 
-    def plot_histogram(self):
-        _, signal = self.generate_signal()
-        plt.hist(signal, bins='auto', edgecolor='black')
-        plt.title('Histogram of Rectangular Symmetric Signal')
-        plt.xlabel('Amplitude')
-        plt.ylabel('Frequency')
-        plt.grid(True)
-        plt.show()
+    def generate_signal(self):
+        sampling_rate = 1000
+        t = np.linspace(self.t1, self.t1 + self.d, int(self.d * sampling_rate))
+        signal = np.zeros_like(t)
+
+        for i in range(len(t)):
+            time_from_period_start = (t[i] - self.t1) % self.T
+            if time_from_period_start < self.T * self.fulfillment:
+                signal[i] = (time_from_period_start / (self.T * self.fulfillment)) * self.A * 2 - self.A
+            else:
+                signal[i] = -((time_from_period_start - self.T * self.fulfillment) / (self.T * (1 - self.fulfillment))) * self.A * 2 + self.A
+
+        return t, signal
+
+class StepSignal:
+    def __init__(self, amplitude, t1, duration, step_time):
+        self.amplitude = amplitude
+        self.t1 = t1
+        self.duration = duration
+        self.step_time = step_time
+
+    def generate_signal(self):
+        sampling_rate = 1000
+        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * sampling_rate))
+        signal = np.zeros_like(t)
+
+        signal[t >= self.step_time] = self.amplitude
+
+        return t, signal
+
+
+class UnitImpulseSignal:
+    def __init__(self, amplitude, t1, duration, sampling_rate, impulse_sample):
+        self.amplitude = amplitude
+        self.t1 = t1
+        self.duration = duration
+        self.sampling_rate = sampling_rate
+        self.impulse_sample = impulse_sample
+
+    def generate_signal(self):
+        total_samples = int(self.duration * self.sampling_rate)
+        signal = np.zeros(total_samples)
+        if self.impulse_sample < total_samples:
+            signal[self.impulse_sample] = self.amplitude
+        t = np.linspace(self.t1, self.t1 + self.duration, total_samples)
+        return t, signal
+
+class ImpulsiveNoiseSignal:
+    def __init__(self, amplitude, t1, duration, sampling_rate, probability):
+        self.amplitude = amplitude
+        self.t1 = t1
+        self.duration = duration
+        self.sampling_rate = sampling_rate
+        self.probability = probability
+
+    def generate_signal(self):
+        total_samples = int(self.duration * self.sampling_rate)
+        signal = np.zeros(total_samples)
+        for i in range(total_samples):
+            if np.random.rand() < self.probability:
+                signal[i] = self.amplitude
+        t = np.linspace(self.t1, self.t1 + self.duration, total_samples)
+        return t, signal
