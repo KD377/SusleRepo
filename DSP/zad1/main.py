@@ -25,15 +25,12 @@ class MyGUI(QMainWindow):
         self.selectFile1Button.clicked.connect(lambda: self.select_file(1))
         self.selectFile2Button.clicked.connect(lambda: self.select_file(2))
         self.operationComboBox.addItems(["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie"])
-        self.performOperationButton.clicked.connect(self.perform_operation)
+        self.performOperationButton.clicked.connect(lambda: self.perform_operation(display_type='plot'))
+        self.performOperationButton_2.clicked.connect(lambda: self.perform_operation(display_type='histogram'))
         self.saveToTxt.clicked.connect(self.save_signal_to_txt)
 
-    def select_file(self, file_number):
-        file_name, _ = QFileDialog.getOpenFileName(self, f"Wybierz plik sygnału {file_number}")
-        if file_name:
-            setattr(self, f'file{file_number}', file_name)
 
-    def perform_operation(self):
+    def perform_operation(self, display_type='plot'):
         if hasattr(self, 'file1') and hasattr(self, 'file2'):
             try:
                 _, _, signal1, _ = odczyt_z_pliku(self.file1)
@@ -41,15 +38,18 @@ class MyGUI(QMainWindow):
 
                 operation = self.operationComboBox.currentText()
                 if operation == "Dodawanie":
-                    result = signal1 + signal2
+                    self.resultSignal = signal1 + signal2
                 elif operation == "Odejmowanie":
-                    result = signal1 - signal2
+                    self.resultSignal = signal1 - signal2
                 elif operation == "Mnożenie":
-                    result = signal1 * signal2
+                    self.resultSignal = signal1 * signal2
                 elif operation == "Dzielenie":
-                    result = np.divide(signal1, signal2, out=np.zeros_like(signal1), where=signal2 != 0)
+                    self.resultSignal = np.divide(signal1, signal2, out=np.zeros_like(signal1), where=signal2 != 0)
 
-                self.display_result(result)
+                if display_type == 'plot':
+                    self.display_result(self.resultSignal)
+                elif display_type == 'histogram':
+                    self.display_result2(self.resultSignal)
             except Exception as e:
                 QMessageBox.warning(self, "Błąd", str(e))
         else:
@@ -64,6 +64,22 @@ class MyGUI(QMainWindow):
         ax.set_ylabel('Amplituda')
         ax.grid(True)
         self.canvas.draw()
+
+    def display_result2(self, result):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.hist(self.resultSignal, bins=50)
+        ax.set_title("Histogram sygnału wynikowego")
+        ax.set_xlabel("Wartość próbki")
+        ax.set_ylabel("Liczba próbek")
+        self.canvas.draw()
+
+    def select_file(self, file_number):
+        file_name, _ = QFileDialog.getOpenFileName(self, f"Wybierz plik sygnału {file_number}")
+        if file_name:
+            setattr(self, f'file{file_number}', file_name)
+
+
     def save_signal(self):
         file_name = self.fileName.text()
         if hasattr(self, 'current_signal'):
@@ -246,7 +262,7 @@ class MyGUI(QMainWindow):
                                 sampling_rate=1000)
             t, signal = uniform.generate_signal()
             ax.plot(t, signal)
-            ax.set_title('Sygnał jednostajny')
+            ax.set_title('Szum o rozkładzie jednostajnym')
         elif signal_type == "Gaussian":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
@@ -255,7 +271,7 @@ class MyGUI(QMainWindow):
                                 sampling_rate=1000)
             t, signal = gaussian.generate_signal()
             ax.plot(t, signal)
-            ax.set_title('Sygnał gaussowski')
+            ax.set_title('Szum gaussowski')
         elif signal_type == "Triangular":
             amplitude = float(self.lineEdit.text())
             term = float(self.lineEdit_2.text())
@@ -284,7 +300,7 @@ class MyGUI(QMainWindow):
                                     sampling_rate=1000)
             t, signal = sinus_pol.generate_half_wave_rectified_signal()
             ax.plot(t, signal)
-            ax.set_title('Sinus pół')
+            ax.set_title('Sygnał sinusoidalny wyprostowany jednopołówkowo')
         elif signal_type == "Sinus_caly":
             amplitude = float(self.lineEdit.text())
             frequency = float(self.lineEdit_2.text())
@@ -294,7 +310,7 @@ class MyGUI(QMainWindow):
                                     sampling_rate=1000)
             t, signal = sinus_pol.generate_full_wave_rectified_signal()
             ax.plot(t, signal)
-            ax.set_title('Sinus cały')
+            ax.set_title('Sygnał sinusoidalny wyprostowany dwupołówkowo')
         elif signal_type == "Unit_Impulsive":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
@@ -324,7 +340,7 @@ class MyGUI(QMainWindow):
             srednia, srednia_bezwzgledna, rms, wariancja, moc_srednia = oblicz_parametry_sygnalu(signal)
         self.labelSrednia.setText(f"Wartość średnia: {srednia:.4f}")
         self.labelSredniaBezwzgledna.setText(f"Wartość średnia bezwzględna: {srednia_bezwzgledna:.4f}")
-        self.labelRMS.setText(f"Wartość skuteczna (RMS): {rms:.4f}")
+        self.labelRMS.setText(f"Wartość skuteczna: {rms:.4f}")
         self.labelWariancja.setText(f"Wariancja: {wariancja:.4f}")
         self.labelMocSrednia.setText(f"Moc średnia: {moc_srednia:.4f}")
         ax.set_xlabel('Czas (sekundy)')
