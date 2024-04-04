@@ -1,4 +1,4 @@
-package org.example;
+package org.example.reader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,9 @@ public class ArticleParser {
         String title = this.extractTitle(rawArticle);
         String body = this.extractBody(rawArticle);
         String places = this.extractPlaces(rawArticle);
+        String correctPlaces = this.extractAndProcessPlaces(places);
 
-        return new Article(date,title,body,places);
+        return new Article(date,title,body,correctPlaces);
     }
 
     private String extractDate(String articleContent) {
@@ -39,14 +40,40 @@ public class ArticleParser {
     }
 
     private String extractBody(String articleContent) {
-        Pattern bodyPattern = Pattern.compile("<BODY>(.*?)</BODY>");
+        Pattern bodyPattern = Pattern.compile("<BODY>(.*?)</BODY>", Pattern.DOTALL); // Add Pattern.DOTALL to match newline characters
         Matcher bodyMatcher = bodyPattern.matcher(articleContent);
-        return bodyMatcher.find() ? bodyMatcher.group(1) : "";
+        if (bodyMatcher.find()) {
+            return bodyMatcher.group(1).trim(); // Trim to remove leading/trailing whitespace
+        } else {
+            return ""; // Return empty string if <BODY> tag not found
+        }
     }
+
 
     private String extractPlaces(String articleContent) {
         Pattern placesPattern = Pattern.compile("<PLACES>(.*?)</PLACES>");
         Matcher placesMatcher = placesPattern.matcher(articleContent);
         return placesMatcher.find() ? placesMatcher.group(1) : "";
+    }
+
+    private String extractAndProcessPlaces(String places) {
+        String[] validLabels = {"west-germany", "usa", "france", "uk", "canada", "japan"};
+        String result = "";
+
+        // Count the number of valid labels found in the places string
+        int count = 0;
+        for (String label : validLabels) {
+            if (places.contains(label)) {
+                count++;
+                result = label.toUpperCase(); // Update result with the current label
+            }
+        }
+
+        // If more than one valid label found or no valid label found, set result to empty string
+        if (count != 1) {
+            result = "";
+        }
+
+        return result;
     }
 }
