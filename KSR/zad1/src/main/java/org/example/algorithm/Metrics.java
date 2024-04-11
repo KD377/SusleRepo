@@ -9,6 +9,11 @@ public class Metrics {
 
         double sum = 0.0;
         for (int i = 0; i < vector1.length; i++) {
+            // Dodane sprawdzenie null dla obu wektorów
+            if (vector1[i] == null || vector2[i] == null) {
+                continue; // Możesz zdecydować, co zrobić w przypadku null; tutaj po prostu pomijamy tę wartość
+            }
+
             if (vector1[i] instanceof String && vector2[i] instanceof String) {
                 // If both elements are strings, compare them
                 String str1 = (String) vector1[i];
