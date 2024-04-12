@@ -51,13 +51,24 @@ public class Main {
 
         double accuracy = (double) correctPredictions / predictedLabels.size();
         String[] labels ={"WEST_GERMANY", "USA", "FRANCE", "UK", "CANADA", "JAPAN"};
-
+        double totalPrecision = 0;
+        double totalRecall = 0;
+        int totalLabels = labels.length;
         for (String label : labels) {
-            calculateMetrics(label, predictedLabels, originalLabels);
+            double[] metrics = calculateMetrics(label, predictedLabels, originalLabels);
+            System.out.println(label + ": ");
+            System.out.println("Recall: "+ metrics[0]);
+            System.out.println("Precision: "+ metrics[1]+"\n");
+            totalPrecision += metrics[0];
+            totalRecall += metrics[1];
         }
+        double meanPrecision = totalPrecision / totalLabels;
+        double meanRecall = totalRecall / totalLabels;
         System.out.println("Dokładność klasyfikacji: " + accuracy);
+        System.out.println("Średnie precision: "+ meanPrecision);
+        System.out.println("Średnie recall: "+ meanRecall);
     }
-    private static void calculateMetrics(String label, HashMap<Object[], String> predictedLabels, HashMap<Object[], String> originalLabels) {
+    private static double[] calculateMetrics(String label, HashMap<Object[], String> predictedLabels, HashMap<Object[], String> originalLabels) {
         int truePositives = 0;
         int falsePositives = 0;
         int falseNegatives = 0;
@@ -87,9 +98,7 @@ public class Main {
             recall = (double) truePositives / (truePositives + falseNegatives);
         }
 
-        System.out.println(label + ":");
-        System.out.println("Precision: " + precision);
-        System.out.println("Recall: " + recall + "\n");
+        return new double[]{precision,recall};
     }
 
 }
