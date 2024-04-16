@@ -5,6 +5,28 @@ from matplotlib.figure import Figure
 
 from SignalGenerator import *
 
+def quantize_signal(signal, levels):
+    min_val = np.min(signal)
+    max_val = np.max(signal)
+    delta = (max_val - min_val) / levels
+    quantized_signal = np.floor((signal - min_val) / delta) * delta + min_val + delta / 2
+    return quantized_signal
+
+def sample_signal(signal, t, sampling_rate):
+    sample_period = 1 / sampling_rate
+    sampled_t = np.arange(t[0], t[-1], sample_period)
+    sampled_signal = np.interp(sampled_t, t, signal)
+    return sampled_t, sampled_signal
+
+def zero_order_hold(sampled_t, sampled_signal, t):
+    return np.interp(t, sampled_t, sampled_signal, left=0, right=0)
+
+def sinc_reconstruction(sampled_t, sampled_signal, t):
+    reconstructed_signal = np.zeros_like(t)
+    for i in range(len(sampled_t)):
+        reconstructed_signal += sampled_signal[i] * np.sinc((t - sampled_t[i]) * len(sampled_t) / (t[-1] - t[0]))
+    return reconstructed_signal
+
 
 class MyGUI(QMainWindow):
     def __init__(self):
@@ -29,6 +51,39 @@ class MyGUI(QMainWindow):
         self.performOperationButton_2.clicked.connect(lambda: self.perform_operation(display_type='histogram'))
         self.saveToTxt.clicked.connect(self.save_signal_to_txt)
 
+        self.kwantyzacja.clicked.connect(self.quantize_signal)
+        self.rekonstrukcja1.clicked.connect(lambda: self.reconstruct_signal(method='zero'))
+        self.rekonstrukcja2.clicked.connect(lambda: self.reconstruct_signal(method='sinc'))
+
+    def quantize_signal(self):
+        # Wartość levels można by pobrać z interfejsu użytkownika
+        levels = 16
+        if hasattr(self, 'current_signal'):
+            t, signal = self.current_signal
+            self.quantized_signal = (t, quantize_signal(signal, levels))
+            self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
+
+    def reconstruct_signal(self, method='zero'):
+        if hasattr(self, 'quantized_signal'):
+
+            t, signal = self.quantized_signal
+            xd_signal = sample_signal(signal, t, 10)
+            xd_t, xd_signal = xd_signal
+            if method == 'zero':
+                reconstructed_signal = zero_order_hold(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+            elif method == 'sinc':
+                reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+            self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
+
+    def display_signal(self, signal_data, title):
+        t, signal = signal_data
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.plot(t, signal)
+        ax.set_title(title)
+        ax.set_xlabel('Czas [s]')
+        ax.set_ylabel('Amplituda')
+        self.canvas.draw()
 
     def perform_operation(self, display_type='plot'):
         if hasattr(self, 'file1') and hasattr(self, 'file2'):

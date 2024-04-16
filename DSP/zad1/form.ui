@@ -447,6 +447,45 @@
         <string>Wypełnienie</string>
        </property>
       </widget>
+      <widget class="QPushButton" name="kwantyzacja">
+       <property name="geometry">
+        <rect>
+         <x>980</x>
+         <y>250</y>
+         <width>161</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dokonaj kwantyzacji</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="rekonstrukcja1">
+       <property name="geometry">
+        <rect>
+         <x>930</x>
+         <y>330</y>
+         <width>331</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dokonaj rekonstrukcji - Ekstrapolacja zerowego rzedu</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="rekonstrukcja2">
+       <property name="geometry">
+        <rect>
+         <x>900</x>
+         <y>440</y>
+         <width>331</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dokonaj rekonstrukcji w oparciu o funkcje sinc</string>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
