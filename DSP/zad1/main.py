@@ -86,7 +86,7 @@ class MyGUI(QMainWindow):
 
     def quantize_signal(self):
         # Wartość levels można by pobrać z interfejsu użytkownika
-        levels = 16
+        levels = float(self.lineEdit_12.text())
         if hasattr(self, 'current_signal'):
             t, signal = self.current_signal
             self.quantized_signal = (t, quantize_signal(signal, levels))

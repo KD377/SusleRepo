@@ -431,7 +431,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Okres</string>
+        <string>Czestotliwosc</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_5">
@@ -598,6 +598,32 @@
        </property>
        <property name="text">
         <string>Generate signal</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit_12">
+       <property name="geometry">
+        <rect>
+         <x>920</x>
+         <y>280</y>
+         <width>121</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_14">
+       <property name="geometry">
+        <rect>
+         <x>920</x>
+         <y>300</y>
+         <width>151</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Poziom kwantyzacji</string>
        </property>
       </widget>
      </widget>
