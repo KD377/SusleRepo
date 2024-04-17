@@ -5,6 +5,26 @@ from matplotlib.figure import Figure
 
 from SignalGenerator import *
 
+def calculate_mse(original_signal, reconstructed_signal):
+    mse = np.mean((original_signal - reconstructed_signal) ** 2)
+    return mse
+
+def calculate_snr(original_signal, reconstructed_signal):
+    signal_power = np.mean(original_signal ** 2)
+    noise_power = np.mean((original_signal - reconstructed_signal) ** 2)
+    snr = 10 * np.log10(signal_power / noise_power)
+    return snr
+
+def calculate_psnr(original_signal, reconstructed_signal):
+    mse = calculate_mse(original_signal, reconstructed_signal)
+    peak_signal = np.max(original_signal)
+    psnr = 20 * np.log10(peak_signal / np.sqrt(mse))
+    return psnr
+
+def calculate_md(original_signal, reconstructed_signal):
+    md = np.max(np.abs(original_signal - reconstructed_signal))
+    return md
+
 def quantize_signal(signal, levels):
     min_val = np.min(signal)
     max_val = np.max(signal)
@@ -19,7 +39,15 @@ def sample_signal(signal, t, sampling_rate):
     return sampled_t, sampled_signal
 
 def zero_order_hold(sampled_t, sampled_signal, t):
-    return np.interp(t, sampled_t, sampled_signal, left=0, right=0)
+    # Tworzy tablicę z wartościami ZOH na podstawie wejściowego sygnału próbkowanego
+    zoh_signal = np.zeros_like(t)
+    j = 0
+    for i in range(len(t)):
+        if j < len(sampled_t) - 1 and t[i] >= sampled_t[j + 1]:
+            j += 1
+        zoh_signal[i] = sampled_signal[j]
+    return zoh_signal
+
 
 def sinc_reconstruction(sampled_t, sampled_signal, t):
     reconstructed_signal = np.zeros_like(t)
@@ -55,6 +83,7 @@ class MyGUI(QMainWindow):
         self.rekonstrukcja1.clicked.connect(lambda: self.reconstruct_signal(method='zero'))
         self.rekonstrukcja2.clicked.connect(lambda: self.reconstruct_signal(method='sinc'))
 
+
     def quantize_signal(self):
         # Wartość levels można by pobrać z interfejsu użytkownika
         levels = 16
@@ -64,15 +93,17 @@ class MyGUI(QMainWindow):
             self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
 
     def reconstruct_signal(self, method='zero'):
-        if hasattr(self, 'quantized_signal'):
+        if hasattr(self, 'current_signal'):
 
-            t, signal = self.quantized_signal
-            xd_signal = sample_signal(signal, t, 10)
+            t, signal = self.current_signal
+            xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
             xd_t, xd_signal = xd_signal
             if method == 'zero':
                 reconstructed_signal = zero_order_hold(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+                self.display_quality_measures(signal, reconstructed_signal)
             elif method == 'sinc':
                 reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+                self.display_quality_measures(signal, reconstructed_signal)
             self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
 
     def display_signal(self, signal_data, title):
@@ -109,6 +140,18 @@ class MyGUI(QMainWindow):
                 QMessageBox.warning(self, "Błąd", str(e))
         else:
             QMessageBox.warning(self, "Błąd", "Nie wybrano plików sygnału.")
+
+    def display_quality_measures(self, original_signal, reconstructed_signal):
+        mse = calculate_mse(original_signal, reconstructed_signal)
+        snr = calculate_snr(original_signal, reconstructed_signal)
+        psnr = calculate_psnr(original_signal, reconstructed_signal)
+        md = calculate_md(original_signal, reconstructed_signal)
+
+        self.labelMSE.setText(f"MSE: {mse:.4f}")
+        self.labelSNR.setText(f"SNR: {snr:.2f} dB")
+        self.labelPSNR.setText(f"PSNR: {psnr:.2f} dB")
+        self.labelMD.setText(f"MD: {md:.4f}")
+
 
     def display_result(self, result):
         self.figure.clear()
@@ -168,21 +211,22 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                sampling_rate=1000)
+                                sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus.generate_signal()
             ax.hist(signal, bins=bins)
         elif signal_type == "Jednostajny":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
-            uniform = UniformNoise(amplitude=amplitude, t1=t1, duration=duration, sampling_rate=1000)
+            uniform = UniformNoise(amplitude=amplitude, t1=t1, duration=duration, sampling_rate=float(self.lineEdit_11.text()))
             t, signal = uniform.generate_signal()
             ax.hist(signal, bins=bins)
         elif signal_type == "Gaussowski":
             amplitude = float(self.lineEdit.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
-            gaussian = GaussianNoise(amplitude=amplitude, mean=0, std_dev=1, t1=t1, duration=duration, sampling_rate=1000)
+            gaussian = GaussianNoise(amplitude=amplitude, mean=0, std_dev=1, t1=t1, duration=duration, sampling_rate=
+            float(self.lineEdit_11.text()))
             t, signal = gaussian.generate_signal()
             ax.hist(signal, bins=bins)
         elif signal_type == "Trojkatny":
@@ -228,7 +272,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus_pol = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                    sampling_rate=1000)
+                                    sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus_pol.generate_half_wave_rectified_signal()
             ax.plot(t, signal)
             ax.set_title('Sinus pół')
@@ -239,7 +283,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus_pol = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                    sampling_rate=1000)
+                                    sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus_pol.generate_full_wave_rectified_signal()
             ax.plot(t, signal)
             ax.set_title('Sinus cały')
@@ -281,7 +325,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                sampling_rate=1000)
+                                sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał Sinusoidalny')
@@ -314,7 +358,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             uniform = UniformNoise(amplitude=amplitude, t1=t1, duration=duration,
-                                sampling_rate=1000)
+                                sampling_rate=float(self.lineEdit_11.text()))
             t, signal = uniform.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Szum o rozkładzie jednostajnym')
@@ -323,7 +367,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             gaussian = GaussianNoise(amplitude=amplitude, mean=0, std_dev=1, t1=t1, duration=duration,
-                                sampling_rate=1000)
+                                sampling_rate=float(self.lineEdit_11.text()))
             t, signal = gaussian.generate_signal()
             ax.plot(t, signal)
             ax.set_title('Szum gaussowski')
@@ -352,7 +396,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus_pol = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                    sampling_rate=1000)
+                                    sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus_pol.generate_half_wave_rectified_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał sinusoidalny wyprostowany jednopołówkowo')
@@ -362,7 +406,7 @@ class MyGUI(QMainWindow):
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
             sinus_pol = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
-                                    sampling_rate=1000)
+                                    sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus_pol.generate_full_wave_rectified_signal()
             ax.plot(t, signal)
             ax.set_title('Sygnał sinusoidalny wyprostowany dwupołówkowo')
