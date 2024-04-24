@@ -10,25 +10,30 @@ def calculate_mse(original_signal, reconstructed_signal):
     return mse
 
 def calculate_snr(original_signal, reconstructed_signal):
-    signal_power = np.mean(original_signal ** 2)
-    noise_power = np.mean((original_signal - reconstructed_signal) ** 2)
+    print(original_signal)
+    print(reconstructed_signal)
+    signal_power = np.sum(original_signal ** 2)
+    noise_power = np.sum((original_signal - reconstructed_signal) ** 2)
     snr = 10 * np.log10(signal_power / noise_power)
     return snr
 
 def calculate_psnr(original_signal, reconstructed_signal):
     mse = calculate_mse(original_signal, reconstructed_signal)
     peak_signal = np.max(original_signal)
-    psnr = 20 * np.log10(peak_signal / np.sqrt(mse))
+    psnr = 10 * np.log10(peak_signal / mse)
     return psnr
 
 def calculate_md(original_signal, reconstructed_signal):
     md = np.max(np.abs(original_signal - reconstructed_signal))
     return md
 
-def quantize_signal(signal, levels):
+def calculate_enob(snr):
+    return (snr - 1.76) / 6.02
+def quantize_signal(signal, bits):
+    levels = 2 ** bits
     min_val = np.min(signal)
     max_val = np.max(signal)
-    delta = (max_val - min_val) / levels
+    delta = (max_val - min_val) / (levels)
     quantized_signal = np.floor((signal - min_val) / delta) * delta + min_val + delta / 2
     return quantized_signal
 
@@ -39,7 +44,6 @@ def sample_signal(signal, t, sampling_rate):
     return sampled_t, sampled_signal
 
 def zero_order_hold(sampled_t, sampled_signal, t):
-    # Tworzy tablicę z wartościami ZOH na podstawie wejściowego sygnału próbkowanego
     zoh_signal = np.zeros_like(t)
     j = 0
     for i in range(len(t)):
@@ -49,10 +53,18 @@ def zero_order_hold(sampled_t, sampled_signal, t):
     return zoh_signal
 
 
-def sinc_reconstruction(sampled_t, sampled_signal, t):
+def sinc_reconstruction(sampled_t, sampled_signal, t, n):
     reconstructed_signal = np.zeros_like(t)
-    for i in range(len(sampled_t)):
-        reconstructed_signal += sampled_signal[i] * np.sinc((t - sampled_t[i]) * len(sampled_t) / (t[-1] - t[0]))
+    total_samples = len(sampled_t)
+
+    for ti, current_t in enumerate(t):
+        start_index = max(0, ti - n)
+        end_index = min(total_samples, ti + n + 1)
+
+        for si in range(start_index, end_index):
+            sinc_arg = (current_t - sampled_t[si]) * total_samples / (t[-1] - t[0])
+            reconstructed_signal[ti] += sampled_signal[si] * np.sinc(sinc_arg)
+
     return reconstructed_signal
 
 
@@ -90,6 +102,7 @@ class MyGUI(QMainWindow):
         if hasattr(self, 'current_signal'):
             t, signal = self.current_signal
             self.quantized_signal = (t, quantize_signal(signal, levels))
+            self.display_quality_measures(signal, self.quantized_signal)
             self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
 
     def reconstruct_signal(self, method='zero'):
@@ -102,7 +115,8 @@ class MyGUI(QMainWindow):
                 reconstructed_signal = zero_order_hold(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
                 self.display_quality_measures(signal, reconstructed_signal)
             elif method == 'sinc':
-                reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+                reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)),
+                                                           int(self.lineEdit_13.text()))
                 self.display_quality_measures(signal, reconstructed_signal)
             self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
 
@@ -146,12 +160,13 @@ class MyGUI(QMainWindow):
         snr = calculate_snr(original_signal, reconstructed_signal)
         psnr = calculate_psnr(original_signal, reconstructed_signal)
         md = calculate_md(original_signal, reconstructed_signal)
+        enob = calculate_enob(snr)
 
         self.labelMSE.setText(f"MSE: {mse:.4f}")
-        self.labelSNR.setText(f"SNR: {snr:.2f} dB")
-        self.labelPSNR.setText(f"PSNR: {psnr:.2f} dB")
+        self.labelSNR.setText(f"SNR: {snr:.4f} dB")
+        self.labelPSNR.setText(f"PSNR: {psnr:.4f} dB")
         self.labelMD.setText(f"MD: {md:.4f}")
-
+        self.labelENOB.setText(f"ENOB: {enob:.4f}")
 
     def display_result(self, result):
         self.figure.clear()

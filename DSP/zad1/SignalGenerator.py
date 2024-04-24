@@ -80,7 +80,7 @@ class SinusSignal:
         self.sampling_rate = sampling_rate
 
     def generate_signal(self):
-        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate))
+        t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate), endpoint=False)
         return t, self.amplitude * np.sin(2 * np.pi * self.frequency * t + self.phase)
 
     def generate_half_wave_rectified_signal(self):
