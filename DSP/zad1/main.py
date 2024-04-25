@@ -10,8 +10,6 @@ def calculate_mse(original_signal, reconstructed_signal):
     return mse
 
 def calculate_snr(original_signal, reconstructed_signal):
-    print(original_signal)
-    print(reconstructed_signal)
     signal_power = np.sum(original_signal ** 2)
     noise_power = np.sum((original_signal - reconstructed_signal) ** 2)
     snr = 10 * np.log10(signal_power / noise_power)
@@ -53,19 +51,31 @@ def zero_order_hold(sampled_t, sampled_signal, t):
     return zoh_signal
 
 
-def sinc_reconstruction(sampled_t, sampled_signal, t, n):
-    reconstructed_signal = np.zeros_like(t)
-    total_samples = len(sampled_t)
+def sinc(t):
+    # Handling the case when t is zero to avoid division by zero
+    return np.where(t == 0, 1.0, np.sin(np.pi * t) / (np.pi * t))
 
-    for ti, current_t in enumerate(t):
-        start_index = max(0, ti - n)
-        end_index = min(total_samples, ti + n + 1)
 
-        for si in range(start_index, end_index):
-            sinc_arg = (current_t - sampled_t[si]) * total_samples / (t[-1] - t[0])
-            reconstructed_signal[ti] += sampled_signal[si] * np.sinc(sinc_arg)
+def sinc_reconstruction(t,quantized_signal,n,Fs):
+    reconstructed_signal = np.zeros_like(quantized_signal)
 
+    for index, (t,x) in enumerate(zip(t,quantized_signal)):
+        if (index - n) < 0:
+            n_min = 0
+        else:
+            n_min = index - n
+        if (index + n) > len(quantized_signal):
+            n_max = len(quantized_signal)
+        else:
+            n_max = index + n
+        reconstructed_sample = 0
+        for i in range(n_min,n_max+1):
+            reconstructed_sample += x*index*(1/Fs)*sinc(t/(1/Fs)-index,x)
+        reconstructed_signal[index] = reconstructed_sample
     return reconstructed_signal
+
+
+
 
 
 class MyGUI(QMainWindow):
@@ -100,24 +110,31 @@ class MyGUI(QMainWindow):
         # Wartość levels można by pobrać z interfejsu użytkownika
         levels = float(self.lineEdit_12.text())
         if hasattr(self, 'current_signal'):
-            t, signal = self.current_signal
+            amplitude = float(self.lineEdit.text())
+            frequency = float(self.lineEdit_2.text())
+            t1 = float(self.lineEdit_3.text())
+            duration = float(self.lineEdit_4.text())
+            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
+                                sampling_rate=float(self.lineEdit_10.text()))
+            t, signal = sinus.generate_signal()
             self.quantized_signal = (t, quantize_signal(signal, levels))
             self.display_quality_measures(signal, self.quantized_signal)
             self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
+            print(self.quantized_signal)
 
     def reconstruct_signal(self, method='zero'):
-        if hasattr(self, 'current_signal'):
+        if hasattr(self, 'quantized_signal'):
 
-            t, signal = self.current_signal
-            xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
-            xd_t, xd_signal = xd_signal
+            t, signal = self.quantized_signal
+            #xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
+            #xd_t, xd_signal = xd_signal
             if method == 'zero':
-                reconstructed_signal = zero_order_hold(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+                reconstructed_signal = zero_order_hold(t, signal, np.linspace(t[0], t[-1], len(t)))
                 self.display_quality_measures(signal, reconstructed_signal)
             elif method == 'sinc':
-                reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)),
-                                                           int(self.lineEdit_13.text()))
+                reconstructed_signal = sinc_reconstruction(t, signal, float(self.lineEdit_13.text()), float(self.lineEdit_10.text()))
                 self.display_quality_measures(signal, reconstructed_signal)
+                print(reconstructed_signal)
             self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
 
     def display_signal(self, signal_data, title):
