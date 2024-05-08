@@ -28,11 +28,11 @@ def calculate_md(original_signal, reconstructed_signal):
 def calculate_enob(snr):
     return (snr - 1.76) / 6.02
 def quantize_signal(signal, bits):
+    max_val = max(signal)
+    min_val = min(signal)
     levels = 2 ** bits
-    min_val = np.min(signal)
-    max_val = np.max(signal)
-    delta = (max_val - min_val) / (levels)
-    quantized_signal = np.floor((signal - min_val) / delta) * delta + min_val + delta / 2
+    step = (max_val - min_val) / levels
+    quantized_signal = np.floor((signal - min_val) / step) * step + min_val
     return quantized_signal
 
 def sample_signal(signal, t, sampling_rate):
@@ -56,22 +56,15 @@ def sinc(t):
     return np.where(t == 0, 1.0, np.sin(np.pi * t) / (np.pi * t))
 
 
-def sinc_reconstruction(t,quantized_signal,n,Fs):
-    reconstructed_signal = np.zeros_like(quantized_signal)
-
-    for index, (t,x) in enumerate(zip(t,quantized_signal)):
-        if (index - n) < 0:
-            n_min = 0
-        else:
-            n_min = index - n
-        if (index + n) > len(quantized_signal):
-            n_max = len(quantized_signal)
-        else:
-            n_max = index + n
-        reconstructed_sample = 0
-        for i in range(n_min,n_max+1):
-            reconstructed_sample += x*index*(1/Fs)*sinc(t/(1/Fs)-index,x)
-        reconstructed_signal[index] = reconstructed_sample
+def sinc_reconstruction(quantized_signal, t, sampling_rate):
+    reconstructed_signal = np.zeros_like(t)
+    Ts = 1 / sampling_rate
+    for i, tq in enumerate(t):
+        # Znormalizuj sumę współczynników sinc do jedności
+        weights = np.sinc((t[i] - t) / Ts)
+        normalized_weights = weights / np.sum(weights)
+        sinc_sum = np.sum(quantized_signal * normalized_weights)
+        reconstructed_signal[i] = sinc_sum
     return reconstructed_signal
 
 
@@ -114,25 +107,27 @@ class MyGUI(QMainWindow):
             frequency = float(self.lineEdit_2.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
-            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
+            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, t1=t1, duration=duration,
                                 sampling_rate=float(self.lineEdit_10.text()))
             t, signal = sinus.generate_signal()
+            self.current_signal = t, signal
             self.quantized_signal = (t, quantize_signal(signal, levels))
             self.display_quality_measures(signal, self.quantized_signal)
             self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
             print(self.quantized_signal)
 
     def reconstruct_signal(self, method='zero'):
-        if hasattr(self, 'quantized_signal'):
+        if hasattr(self, 'current_signal'):
 
-            t, signal = self.quantized_signal
+            t, signal = self.current_signal
+            quantized_signal =quantize_signal(signal, float(self.lineEdit_12.text()))
             #xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
             #xd_t, xd_signal = xd_signal
             if method == 'zero':
                 reconstructed_signal = zero_order_hold(t, signal, np.linspace(t[0], t[-1], len(t)))
                 self.display_quality_measures(signal, reconstructed_signal)
             elif method == 'sinc':
-                reconstructed_signal = sinc_reconstruction(t, signal, float(self.lineEdit_13.text()), float(self.lineEdit_10.text()))
+                reconstructed_signal = sinc_reconstruction(quantized_signal, t, int(self.lineEdit_13.text()))
                 self.display_quality_measures(signal, reconstructed_signal)
                 print(reconstructed_signal)
             self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
@@ -356,7 +351,7 @@ class MyGUI(QMainWindow):
             frequency = float(self.lineEdit_2.text())
             t1 = float(self.lineEdit_3.text())
             duration = float(self.lineEdit_4.text())
-            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, phase=0, t1=t1, duration=duration,
+            sinus = SinusSignal(amplitude=amplitude, frequency=frequency, t1=t1, duration=duration,
                                 sampling_rate=float(self.lineEdit_11.text()))
             t, signal = sinus.generate_signal()
             ax.plot(t, signal)

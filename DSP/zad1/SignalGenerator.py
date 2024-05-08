@@ -71,17 +71,16 @@ def operuj_na_sygnalach(signal1, signal2, operacja):
     return wynik
 
 class SinusSignal:
-    def __init__(self, amplitude, frequency, phase, t1, duration, sampling_rate):
+    def __init__(self, amplitude, frequency, t1, duration, sampling_rate):
         self.amplitude = amplitude
         self.frequency = frequency
-        self.phase = phase
         self.t1 = t1
         self.duration = duration
         self.sampling_rate = sampling_rate
 
     def generate_signal(self):
         t = np.linspace(self.t1, self.t1 + self.duration, int(self.duration * self.sampling_rate), endpoint=False)
-        return t, self.amplitude * np.sin(2 * np.pi * self.frequency * t + self.phase)
+        return t, self.amplitude * np.sin(2 * np.pi * self.frequency * t)
 
     def generate_half_wave_rectified_signal(self):
         t, signal = self.generate_signal()
