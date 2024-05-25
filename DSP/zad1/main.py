@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -10,8 +11,6 @@ def calculate_mse(original_signal, reconstructed_signal):
     return mse
 
 def calculate_snr(original_signal, reconstructed_signal):
-    print(original_signal)
-    print(reconstructed_signal)
     signal_power = np.sum(original_signal ** 2)
     noise_power = np.sum((original_signal - reconstructed_signal) ** 2)
     snr = 10 * np.log10(signal_power / noise_power)
@@ -30,12 +29,9 @@ def calculate_md(original_signal, reconstructed_signal):
 def calculate_enob(snr):
     return (snr - 1.76) / 6.02
 def quantize_signal(signal, bits):
-    levels = 2 ** bits
-    min_val = np.min(signal)
-    max_val = np.max(signal)
-    delta = (max_val - min_val) / (levels)
-    quantized_signal = np.floor((signal - min_val) / delta) * delta + min_val + delta / 2
-    return quantized_signal
+    quantization_levels = 2 ** bits
+    return np.round(signal * (quantization_levels - 1)) / (quantization_levels - 1)
+
 
 def sample_signal(signal, t, sampling_rate):
     sample_period = 1 / sampling_rate
@@ -52,20 +48,31 @@ def zero_order_hold(sampled_t, sampled_signal, t):
         zoh_signal[i] = sampled_signal[j]
     return zoh_signal
 
+def sinc(t,x):
+    if x != 0:
+        return np.sin(np.pi * t)/(np.pi * t)
+    else:
+        return 1
 
-def sinc_reconstruction(sampled_t, sampled_signal, t, n):
-    reconstructed_signal = np.zeros_like(t)
-    total_samples = len(sampled_t)
+def sinc_reconstruction(t,quantized_signal,n,Fs):
+    reconstructed_signal = np.zeros_like(quantized_signal)
 
-    for ti, current_t in enumerate(t):
-        start_index = max(0, ti - n)
-        end_index = min(total_samples, ti + n + 1)
-
-        for si in range(start_index, end_index):
-            sinc_arg = (current_t - sampled_t[si]) * total_samples / (t[-1] - t[0])
-            reconstructed_signal[ti] += sampled_signal[si] * np.sinc(sinc_arg)
-
+    for index, (t,x) in enumerate(zip(t,quantized_signal)):
+        if (index - n) < 0:
+            n_min = 0
+        else:
+            n_min = index - n
+        if (index + n) > len(quantized_signal):
+            n_max = len(quantized_signal)
+        else:
+            n_max = index + n
+        reconstructed_sample = 0
+        for i in range(n_min,n_max+1):
+            reconstructed_sample += x*index*(1/Fs)*sinc(t/(1/Fs)-index,x)
+        reconstructed_signal[index] = reconstructed_sample
     return reconstructed_signal
+
+
 
 
 class MyGUI(QMainWindow):
@@ -106,17 +113,17 @@ class MyGUI(QMainWindow):
             self.display_signal(self.quantized_signal, title="Kwantyzacja Sygnału")
 
     def reconstruct_signal(self, method='zero'):
-        if hasattr(self, 'current_signal'):
+        if hasattr(self, 'quantized_signal'):
 
-            t, signal = self.current_signal
-            xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
-            xd_t, xd_signal = xd_signal
+            t, signal = self.quantized_signal
+            # xd_signal = sample_signal(signal, t, float(self.lineEdit_10.text()))
+            # xd_t, xd_signal = xd_signal
             if method == 'zero':
-                reconstructed_signal = zero_order_hold(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)))
+                reconstructed_signal = zero_order_hold(signal, np.linspace(t[0], t[-1], len(t)))
                 self.display_quality_measures(signal, reconstructed_signal)
             elif method == 'sinc':
-                reconstructed_signal = sinc_reconstruction(xd_t, xd_signal, np.linspace(t[0], t[-1], len(t)),
-                                                           int(self.lineEdit_13.text()))
+                print(signal)
+                reconstructed_signal = sinc_reconstruction(signal,t,float(self.lineEdit_10.text()))
                 self.display_quality_measures(signal, reconstructed_signal)
             self.display_signal((t, reconstructed_signal), title=f"Rekonstrukcja - {method.capitalize()}")
 
