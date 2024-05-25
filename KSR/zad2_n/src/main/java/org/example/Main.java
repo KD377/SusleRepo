@@ -2,6 +2,11 @@ package org.example;
 
 import org.example.data.CsvReader;
 import org.example.data.PlayerStats;
+import org.example.fuzzy.FuzzySet;
+import org.example.generator.LinguisticSummary;
+import org.example.generator.LinguisticVariable;
+import org.example.generator.SummaryGenerator;
+import org.example.membership.TrapezoidalMembershipFunction;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,7 +18,11 @@ public class Main {
         try {
             List<PlayerStats> playerStats = csvReader.readCsv("src/main/resources/NBA_Player_Stats.csv");
 
-            System.out.println(playerStats.get(0).getName());
+            LinguisticVariable gamesPlayed = new LinguisticVariable("gamesPlayed");
+            gamesPlayed.addTerm("mało", new FuzzySet(new TrapezoidalMembershipFunction(9,16,27,33)));
+
+            LinguisticSummary summary = SummaryGenerator.generateSummary(playerStats, gamesPlayed, "many");
+            System.out.println(summary);
         } catch (IOException e) {
             e.printStackTrace();
         }

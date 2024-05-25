@@ -1,4 +1,4 @@
-package org.example.fuzzy;
+package org.example.membership;
 
 import lombok.AllArgsConstructor;
 

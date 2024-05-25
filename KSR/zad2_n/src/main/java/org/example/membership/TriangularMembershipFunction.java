@@ -1,4 +1,4 @@
-package org.example.fuzzy;
+package org.example.membership;
 
 public class TriangularMembershipFunction implements MembershipFunction {
     private double a, b, c;
