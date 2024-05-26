@@ -1,22 +1,23 @@
 package org.example.generator;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
+@AllArgsConstructor
+@Getter
 public class LinguisticSummary {
     private String subject;
-    private String predicate;
+    private String summarizer;
     private String quantifier;
+    private String qualifier;
     private double truthValue;
-
-    public LinguisticSummary(String subject, String predicate, String quantifier, double truthValue) {
-        this.subject = subject;
-        this.predicate = predicate;
-        this.quantifier = quantifier;
-        this.truthValue = truthValue;
-    }
 
     @Override
     public String toString() {
-        return quantifier + " " + subject + " ma " + predicate + " with truth value " + truthValue;
+        if (qualifier != null && !qualifier.isEmpty()) {
+            return quantifier + " " + subject + " którzy mają " + qualifier + " mają " + summarizer + " with truth value " + truthValue;
+        } else {
+            return quantifier + " " + subject + " mają " + summarizer + " with truth value " + truthValue;
+        }
     }
 }

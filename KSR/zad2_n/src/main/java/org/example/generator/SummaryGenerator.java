@@ -4,64 +4,113 @@ import org.example.data.PlayerStats;
 import org.example.fuzzy.FuzzySet;
 import org.example.generator.Quantifiers;
 import org.example.generator.Terms;
+import org.example.membership.MembershipFunction;
 import org.example.membership.TrapezoidalMembershipFunction;
+import org.example.membership.TriangularMembershipFunction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SummaryGenerator {
-//    public static LinguisticSummary generateSummary(List<PlayerStats> players, LinguisticVariable variable, String term) {
-//        FuzzySet set = variable.getTerm(term);
-//        double sum = 0;
-//        for (PlayerStats player : players) {
-//            double value = player.getGamesPlayed();
-//            sum += set.calculateMembership(value);
-//        }
-//        double truthValue = sum / players.size();
-//        return new LinguisticSummary("graczy", term, "Większość", truthValue);
-//    }
-    public static void generateAllSummariesForGamesPlayed(List<PlayerStats> players) {
-        Map<String, TrapezoidalMembershipFunction> relativeQuantifiers = Quantifiers.getRelativeQuantifiers();
-        Map<String, FuzzySet> gamePlayedTerms = Terms.getGamePlayedTerms();
-
-        for (String quantifier : relativeQuantifiers.keySet()) {
-            for (String termName : gamePlayedTerms.keySet()) {
-                FuzzySet term = gamePlayedTerms.get(termName);
-                LinguisticSummary summary = generateSummary(players, "games played", term,List.of(termName), quantifier, relativeQuantifiers.get(quantifier));
-                System.out.println(summary);
-            }
-        }
+    public static LinguisticSummary generateSummary(List<PlayerStats> players, List<String> summarizers, String quantifier) {
+        return generateSummary(players, summarizers, quantifier, null);
     }
 
-    public static void generateAllSummariesForAge(List<PlayerStats> players) {
-        Map<String, TrapezoidalMembershipFunction> relativeQuantifiers = Quantifiers.getRelativeQuantifiers();
+    public static Map<String, FuzzySet> getFuzzySetsForSummarizers(List<String> summarizers) {
         Map<String, FuzzySet> ageTerms = Terms.getAgeTerms();
+        Map<String, FuzzySet> gamePlayedTerms = Terms.getGamePlayedTerms();
+        Map<String, FuzzySet> threePointersMadeTerms = Terms.getThreePointersMadeTerms();
+        Map<String, FuzzySet> threePointerAttemptsTerms = Terms.getThreePointerAttemptsTerms();
+        Map<String, FuzzySet> twoPointersMadeTerms = Terms.getTwoPointersMadeTerms();
+        Map<String, FuzzySet> twoPointerAttemptsTerms = Terms.getTwoPointerAttemptsTerms();
+        Map<String, FuzzySet> assistsTerms = Terms.getAssistsTerms();
+        Map<String, FuzzySet> stealsTerms = Terms.getStealsTerms();
+        Map<String, FuzzySet> blocksTerms = Terms.getBlocksTerms();
+        Map<String, FuzzySet> turnoversTerms = Terms.getTurnoversTerms();
 
-        for (String quantifier : relativeQuantifiers.keySet()) {
-            for (String termName : ageTerms.keySet()) {
-                FuzzySet term = ageTerms.get(termName);
-                LinguisticSummary summary = generateSummary(players, "age", term,List.of(termName), quantifier, relativeQuantifiers.get(quantifier));
-                System.out.println(summary);
+        Map<String, FuzzySet> fuzzySets = new HashMap<>();
+
+        for (String summarizer : summarizers) {
+            if (ageTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, ageTerms.get(summarizer));
+            } else if (gamePlayedTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, gamePlayedTerms.get(summarizer));
+            } else if (threePointersMadeTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, threePointersMadeTerms.get(summarizer));
+            } else if (threePointerAttemptsTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, threePointerAttemptsTerms.get(summarizer));
+            } else if (twoPointersMadeTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, twoPointersMadeTerms.get(summarizer));
+            } else if (twoPointerAttemptsTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, twoPointerAttemptsTerms.get(summarizer));
+            } else if (assistsTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, assistsTerms.get(summarizer));
+            } else if (stealsTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, stealsTerms.get(summarizer));
+            } else if (blocksTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, blocksTerms.get(summarizer));
+            } else if (turnoversTerms.containsKey(summarizer)) {
+                fuzzySets.put(summarizer, turnoversTerms.get(summarizer));
+            } else {
+                System.out.println("Summarizer '" + summarizer + "' not found in any term map.");
             }
         }
+
+        return fuzzySets;
     }
 
-    public static LinguisticSummary generateSummary(List<PlayerStats> players, String attribute, FuzzySet term,List<String> summarizers, String quantifier, TrapezoidalMembershipFunction quantifierFunction) {
-        double sum = 0;
-        for (PlayerStats player : players) {
-            double value = 0;
-            if (attribute.equals("games played")) {
-                value = player.getGamesPlayed();
-            } else if (attribute.equals("age")) {
-                value = player.getAge();
-            }
-            //double membershipValue = term.calculateMembership(value);
-           // sum += membershipValue;
+    public static Map<String,FuzzySet> getQuantifierWithType(String quantifier) {
+        Map<String,FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
+        Map<String,FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
+        Map<String, FuzzySet> quantifierWithType = new HashMap<>();
+        if (relative.containsKey(quantifier)) {
+            quantifierWithType.put("relative",relative.get(quantifier));
+        } else if (absolute.containsKey(quantifier)) {
+            quantifierWithType.put("absolute",absolute.get(quantifier));
         }
-        double averageMembership = sum / players.size();
-        double truthValue = quantifierFunction.calculateMembership(averageMembership);
+        else {
+            quantifierWithType.put("not found",absolute.get(0));
+        }
+        return  quantifierWithType;
+    }
+
+    public static LinguisticSummary generateSummary(List<PlayerStats> players, List<String> summarizers, String quantifier, String qualifier) {
+
         String summarizer = String.join(" i ", summarizers);
-        //System.out.println("Term: '" + summarizer + "', Quantifier: '" + quantifier + "', Average Membership: " + averageMembership + ", Truth Value: " + truthValue);
-        return new LinguisticSummary("players", summarizer, quantifier, truthValue);
+        Map<String,FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+
+
+        Map<String,FuzzySet> quantifierWithType = getQuantifierWithType(quantifier);
+
+        double truthValue;
+        if (qualifier == null){
+            if(quantifierWithType.containsKey("relative")){
+                truthValue = QualityMeasures.degreeOfTruthRelative(players,summarizersFuzzySets,quantifierWithType.get("relative"));
+            }
+            else {
+                truthValue = QualityMeasures.degreeOfTruthAbsolute(players,summarizersFuzzySets,quantifierWithType.get("absolute"));
+            }
+
+        } else {
+            FuzzySet qualifierFuzzy = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
+            truthValue = QualityMeasures.degreeOfTruthSecondType(players,summarizersFuzzySets,quantifierWithType.get("relative"),qualifierFuzzy,qualifier);
+        }
+
+
+        System.out.println("Summarizer: '" + summarizer + "', Quantifier: '" + quantifier + "', Qualifier: '" + (qualifier != null ? qualifier : "none") + "', Truth Value: " + truthValue);
+
+        return new LinguisticSummary("graczy", summarizer, quantifier, qualifier, truthValue);
+    }
+
+    private static List<FuzzySet> extractSummarizers(List<String> summarizers, Map<String, FuzzySet> threePointersMadeTerms) {
+        List<FuzzySet> fuzzySets = new ArrayList<>();
+        for (String summarizer : summarizers) {
+            if (threePointersMadeTerms.containsKey(summarizer)) {
+                fuzzySets.add(threePointersMadeTerms.get(summarizer));
+            }
+        }
+        return fuzzySets;
     }
 }
