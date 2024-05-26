@@ -17,6 +17,6 @@ public class LinguisticSummary {
 
     @Override
     public String toString() {
-        return quantifier + " of the " + subject + " are " + predicate + " with truth value " + truthValue;
+        return quantifier + " " + subject + " ma " + predicate + " with truth value " + truthValue;
     }
 }

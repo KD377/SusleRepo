@@ -12,8 +12,8 @@ import org.example.membership.MembershipFunction;
 @NoArgsConstructor
 public class FuzzySet {
     private MembershipFunction membershipFunction;
-
     public double calculateMembership(double value) {
        return membershipFunction.calculateMembership(value);
     }
+
 }

@@ -1,8 +1,10 @@
 package org.example.membership;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public class TrapezoidalMembershipFunction implements MembershipFunction{
     private double a, b, c, d;
 
