@@ -97,11 +97,37 @@ public class SummaryGenerator {
             FuzzySet qualifierFuzzy = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
             truthValue = QualityMeasures.degreeOfTruthSecondType(players,summarizersFuzzySets,quantifierWithType.get("relative"),qualifierFuzzy,qualifier);
         }
+        double T3;
+        double T4;
+        double T9;
+        double T10;
+        double T11;
+        if(qualifier != null){
+            FuzzySet qualifierFuzzy = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
+            T3 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,qualifierFuzzy,qualifier);
+            T4 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,qualifierFuzzy,qualifier);
+            T9 = QualityMeasures.degreeOfQualifierImprecision(players,qualifierFuzzy,qualifier);
+            T10 = QualityMeasures.degreeOfQualifierCardinality(players,qualifierFuzzy,qualifier);
+            T11 = QualityMeasures.lengthOfQualifier(qualifierFuzzy);
+        }
+        else {
+            T3 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,null,null);
+            T4 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,null,null);
+            T9 = 0;
+            T10 = 0;
+            T11 = 0;
+        }
+        double T2 = QualityMeasures.degreeOfImprecision(summarizersFuzzySets,players);
+        double T5 = QualityMeasures.lengthOfSummary(summarizersFuzzySets);
+        double T8 = QualityMeasures.degreeOfSummarizerCardinality(players,summarizersFuzzySets);
+        double T6 = 0;
+        double T7 = 0;
 
+//        System.out.println("Summarizer: '" + summarizer + "', Quantifier: '" + quantifier + "', Qualifier: '" + (qualifier != null ? qualifier : "none") + "', Truth Value: " + truthValue + " t2: " + T2 + "\nT3: " + T3 + "\nT4: " + T4 +"\nT5: " + T5
+//                + "\nT8: " + T8 + "\nT9: " + T9+ "\nT10: " + T10+ "\nT11: " + T11);
+        double T = 0.4 * truthValue + 0.075 * T2 + 0.075 * T3 + 0.075 * T4 + 0.075 * T5 + 0.075 * T6 + 0.075 * T7 + 0.075 * T8 + 0.075 * T9 + 0.075 * T10 + 0.075 * T11;
 
-        System.out.println("Summarizer: '" + summarizer + "', Quantifier: '" + quantifier + "', Qualifier: '" + (qualifier != null ? qualifier : "none") + "', Truth Value: " + truthValue);
-
-        return new LinguisticSummary("graczy", summarizer, quantifier, qualifier, truthValue);
+        return new LinguisticSummary("graczy", summarizer, quantifier, qualifier, T);
     }
 
     private static List<FuzzySet> extractSummarizers(List<String> summarizers, Map<String, FuzzySet> threePointersMadeTerms) {

@@ -15,10 +15,10 @@ public class Main {
         try {
             List<PlayerStats> playerStats = csvReader.readCsv("src/main/resources/NBA_Player_Stats.csv");
 
-            // Podsumowanie pierwszego typu
+
             System.out.println(SummaryGenerator.generateSummary(playerStats, List.of("młody wiek"), "około 5000"));
 
-            // Podsumowanie drugiego typu
+
             System.out.println(SummaryGenerator.generateSummary(playerStats, List.of("średni wiek"), "większość", "mało gier rozegranych"));
 
         } catch (IOException e) {

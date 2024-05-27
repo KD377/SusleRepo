@@ -107,55 +107,79 @@ public class QualityMeasures {
     }
 
     // Degree of imprecision (T2)
-    public static double degreeOfImprecision(List<FuzzySet> summarizers) {
-        double product = 1.0;
-        for (FuzzySet summarizer : summarizers) {
-            TrapezoidalMembershipFunction function = (TrapezoidalMembershipFunction) summarizer.getMembershipFunction();
-            double inSj = (function.getD() - function.getA()) / (function.getD() - function.getA()); // Assuming universal set range
-            product *= inSj;
+    public static double degreeOfImprecision(Map<String,FuzzySet> summarizers, List<PlayerStats> players) {
+        double value = 1;
+        int x = players.size();
+        for(String summarizer : summarizers.keySet()){
+            int supp = 0;
+            for(PlayerStats player : players) {
+                if(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)) > 0) {
+                    supp ++;
+                }
+            }
+            value *= (double) supp /x;
         }
-        return 1 - Math.pow(product, 1.0 / summarizers.size());
+        return 1 - Math.pow(value,(double)1/summarizers.size());
+
     }
 
     // Degree of covering (T3)
-    public static double degreeOfCovering(List<PlayerStats> players, FuzzySet summarizer, FuzzySet qualifier) {
-        double numerator = 0;
-        double denominator = 0;
-        for (PlayerStats player : players) {
-            double summarizerMembership = summarizer.calculateMembership(player.getGamesPlayed());
-            double qualifierMembership = qualifier.calculateMembership(player.getGamesPlayed());
-            numerator += (summarizerMembership > 0 && qualifierMembership > 0) ? 1 : 0;
-            denominator += summarizerMembership > 0 ? 1 : 0;
-        }
-        return numerator / denominator;
-    }
-
-    // Degree of appropriateness (T4)
-    public static double degreeOfAppropriateness(List<PlayerStats> players, List<FuzzySet> summarizers, FuzzySet qualifier) {
-        double t3 = degreeOfCovering(players, summarizers.get(0), qualifier);
-        double product = 1.0;
-        for (FuzzySet summarizer : summarizers) {
-            double rj = 0;
-            for (PlayerStats player : players) {
-                double summarizerMembership = summarizer.calculateMembership(player.getGamesPlayed());
-                rj += summarizerMembership > 0 ? 1 : 0;
+    public static double degreeOfCovering(List<PlayerStats> players, Map<String,FuzzySet> summarizers,FuzzySet qualifier,String qualifierName) {
+        int t = 0;
+        int h = 0;
+        if (qualifier != null) {
+            for(String summarizer : summarizers.keySet()) {
+                for(PlayerStats player : players) {
+                    if(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)) > 0 && qualifier.calculateMembership(getAttribute(qualifierName,player)) >0) {
+                        t += 1;
+                    }
+                    if(qualifier.calculateMembership(getAttribute(qualifierName,player)) > 0) {
+                        h += 1;
+                    }
+                }
             }
-            rj /= players.size();
-            product *= rj;
+            return (double)t/h;
+        } else {
+            for(String summarizer : summarizers.keySet()) {
+                for(PlayerStats player : players) {
+                    if(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)) > 0) {
+                        t += 1;
+                    }
+                    h +=1;
+                }
+            }
+            return (double)t/h;
         }
-        return Math.abs(product - t3);
+
     }
 
-    // Length of a summary (T5)
-    public static double lengthOfSummary(List<FuzzySet> summarizers) {
+
+    public static double degreeOfAppropriateness(List<PlayerStats> players, Map<String,FuzzySet> summarizers,FuzzySet qualifier,String qualifierName) {
+        double r = 0;
+        int m = players.size();
+        int g =0;
+        double multi = 1;
+        for(String summarizer : summarizers.keySet()) {
+            for(PlayerStats player : players) {
+                if(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)) > 0) {
+                    g =1;
+                } else {
+                    g =0;
+                }
+                r += g;
+            }
+            multi *= r/m;
+        }
+        return Math.abs(multi - degreeOfCovering(players,summarizers,qualifier,qualifierName));
+
+    }
+
+    public static double lengthOfSummary(Map<String,FuzzySet> summarizers) {
         return 2 * (Math.pow(0.5, summarizers.size()));
     }
 
-    // Degree of quantifier imprecision (T6)
-    public static double degreeOfQuantifierImprecision(MembershipFunction quantifierFunction) {
-        // Assuming the universal set range is from 0 to 1 for relative quantifiers
-        double suppQ = quantifierFunction.calculateMembership(1);
-        return 1 - suppQ;
+    public static double degreeOfQuantifierImprecision(List<PlayerStats> players, FuzzySet quantifier) {
+        return 0;
     }
 
     // Degree of quantifier cardinality (T7)
@@ -166,32 +190,42 @@ public class QualityMeasures {
     }
 
     // Degree of summarizer cardinality (T8)
-    public static double degreeOfSummarizerCardinality(List<FuzzySet> summarizers) {
-        double product = 1.0;
-        for (FuzzySet summarizer : summarizers) {
-            TrapezoidalMembershipFunction function = (TrapezoidalMembershipFunction) summarizer.getMembershipFunction();
-            double cardinality = function.getD() - function.getA(); // Assuming the universal set range is known
-            product *= cardinality;
+    public static double degreeOfSummarizerCardinality(List<PlayerStats> players, Map<String,FuzzySet> summarizers) {
+        double multi = 1;
+        for (String summarizer : summarizers.keySet()) {
+            double sum = 0;
+            for (PlayerStats player : players) {
+                sum += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+            multi *= sum / players.size();
         }
-        return 1 - Math.pow(product, 1.0 / summarizers.size());
+        return 1 - Math.pow(multi,(double) 1/summarizers.size());
     }
 
     // Degree of qualifier imprecision (T9)
-    public static double degreeOfQualifierImprecision(FuzzySet qualifier) {
-        TrapezoidalMembershipFunction function = (TrapezoidalMembershipFunction) qualifier.getMembershipFunction();
-        double inWgj = (function.getD() - function.getA()) / (function.getD() - function.getA()); // Assuming universal set range
-        return 1 - inWgj;
+    public static double degreeOfQualifierImprecision(List<PlayerStats> players,FuzzySet qualifier,String qualifierName) {
+        int supp = 0;
+        for(PlayerStats player : players) {
+            if (qualifier.calculateMembership(getAttribute(qualifierName,player)) > 1) {
+                supp ++;
+            }
+        }
+        return 1 - ((double)supp/ players.size());
     }
 
-    // Degree of qualifier cardinality (T10)
-    public static double degreeOfQualifierCardinality(FuzzySet qualifier) {
-        TrapezoidalMembershipFunction function = (TrapezoidalMembershipFunction) qualifier.getMembershipFunction();
-        double wCardinality = function.getD() - function.getA(); // Assuming the universal set range is known
-        return 1 - wCardinality;
+
+    public static double degreeOfQualifierCardinality(List<PlayerStats> players,FuzzySet qualifier,String qualifierName) {
+        int supp = 0;
+        for(PlayerStats player : players) {
+            if (qualifier.calculateMembership(getAttribute(qualifierName,player)) > 1) {
+                supp ++;
+            }
+        }
+        return 1 - ((double)supp/ players.size());
     }
 
-    // Length of qualifier (T11)
+
     public static double lengthOfQualifier(FuzzySet qualifier) {
-        return 2 * (1 - Math.pow(0.5, 1)); // |W| = 1 since we assume only one qualifier at a time
+        return 2 * (Math.pow(0.5, 1));
     }
 }
