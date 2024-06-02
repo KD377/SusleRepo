@@ -1,5 +1,6 @@
 package org.example.generator;
 
+import org.example.data.PlayerGroupHelper;
 import org.example.data.PlayerStats;
 import org.example.fuzzy.FuzzySet;
 import org.example.generator.Quantifiers;
@@ -61,82 +62,164 @@ public class SummaryGenerator {
         return fuzzySets;
     }
 
-    public static Map<String,FuzzySet> getQuantifierWithType(String quantifier) {
-        Map<String,FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
-        Map<String,FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
+    public static Map<String, FuzzySet> getQuantifierWithType(String quantifier) {
+        Map<String, FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
+        Map<String, FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
         Map<String, FuzzySet> quantifierWithType = new HashMap<>();
         if (relative.containsKey(quantifier)) {
-            quantifierWithType.put("relative",relative.get(quantifier));
+            quantifierWithType.put("relative", relative.get(quantifier));
         } else if (absolute.containsKey(quantifier)) {
-            quantifierWithType.put("absolute",absolute.get(quantifier));
+            quantifierWithType.put("absolute", absolute.get(quantifier));
+        } else {
+            quantifierWithType.put("not found", absolute.get(0));
         }
-        else {
-            quantifierWithType.put("not found",absolute.get(0));
-        }
-        return  quantifierWithType;
+        return quantifierWithType;
     }
 
     public static LinguisticSummary generateSummary(List<PlayerStats> players, List<String> summarizers, String quantifier, String qualifier) {
 
         String summarizer = String.join(" i ", summarizers);
-        Map<String,FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+        Map<String, FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
 
 
-        Map<String,FuzzySet> quantifierWithType = getQuantifierWithType(quantifier);
+        Map<String, FuzzySet> quantifierWithType = getQuantifierWithType(quantifier);
 
         double truthValue;
-        if (qualifier == null){
-            if(quantifierWithType.containsKey("relative")){
-                truthValue = QualityMeasures.degreeOfTruthRelative(players,summarizersFuzzySets,quantifierWithType.get("relative"));
-            }
-            else {
-                truthValue = QualityMeasures.degreeOfTruthAbsolute(players,summarizersFuzzySets,quantifierWithType.get("absolute"));
+        if (qualifier == null) {
+            if (quantifierWithType.containsKey("relative")) {
+                truthValue = QualityMeasures.degreeOfTruthRelative(players, summarizersFuzzySets, quantifierWithType.get("relative"));
+            } else {
+                truthValue = QualityMeasures.degreeOfTruthAbsolute(players, summarizersFuzzySets, quantifierWithType.get("absolute"));
             }
 
         } else {
             FuzzySet qualifierFuzzy = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
-            truthValue = QualityMeasures.degreeOfTruthSecondType(players,summarizersFuzzySets,quantifierWithType.get("relative"),qualifierFuzzy,qualifier);
+            truthValue = QualityMeasures.degreeOfTruthSecondType(players, summarizersFuzzySets, quantifierWithType.get("relative"), qualifierFuzzy, qualifier);
         }
         double T3;
         double T4;
         double T9;
         double T10;
         double T11;
-        if(qualifier != null){
+        if (qualifier != null) {
             FuzzySet qualifierFuzzy = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
-            T3 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,qualifierFuzzy,qualifier);
-            T4 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,qualifierFuzzy,qualifier);
-            T9 = QualityMeasures.degreeOfQualifierImprecision(players,qualifierFuzzy,qualifier);
-            T10 = QualityMeasures.degreeOfQualifierCardinality(players,qualifierFuzzy,qualifier);
+            T3 = QualityMeasures.degreeOfCovering(players, summarizersFuzzySets, qualifierFuzzy, qualifier);
+            T4 = QualityMeasures.degreeOfCovering(players, summarizersFuzzySets, qualifierFuzzy, qualifier);
+            T9 = QualityMeasures.degreeOfQualifierImprecision(players, qualifierFuzzy, qualifier);
+            T10 = QualityMeasures.degreeOfQualifierCardinality(players, qualifierFuzzy, qualifier);
             T11 = QualityMeasures.lengthOfQualifier(qualifierFuzzy);
+        } else {
+            T3 = QualityMeasures.degreeOfCovering(players, summarizersFuzzySets, null, null);
+            T4 = QualityMeasures.degreeOfCovering(players, summarizersFuzzySets, null, null);
+            T9 = 1;
+            T10 = 1;
+            T11 = 1;
         }
-        else {
-            T3 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,null,null);
-            T4 = QualityMeasures.degreeOfCovering(players,summarizersFuzzySets,null,null);
-            T9 = 0;
-            T10 = 0;
-            T11 = 0;
-        }
-        double T2 = QualityMeasures.degreeOfImprecision(summarizersFuzzySets,players);
+        double T2 = QualityMeasures.degreeOfImprecision(summarizersFuzzySets, players);
         double T5 = QualityMeasures.lengthOfSummary(summarizersFuzzySets);
-        double T8 = QualityMeasures.degreeOfSummarizerCardinality(players,summarizersFuzzySets);
+        double T8 = QualityMeasures.degreeOfSummarizerCardinality(players, summarizersFuzzySets);
         double T6 = 0;
         double T7 = 0;
 
-//        System.out.println("Summarizer: '" + summarizer + "', Quantifier: '" + quantifier + "', Qualifier: '" + (qualifier != null ? qualifier : "none") + "', Truth Value: " + truthValue + " t2: " + T2 + "\nT3: " + T3 + "\nT4: " + T4 +"\nT5: " + T5
-//                + "\nT8: " + T8 + "\nT9: " + T9+ "\nT10: " + T10+ "\nT11: " + T11);
+        System.out.println("Summarizer: '" + summarizer + "', Quantifier: '" + quantifier + "', Qualifier: '" + (qualifier != null ? qualifier : "none") + "', Truth Value: " + truthValue + " t2: " + T2 + "\nT3: " + T3 + "\nT4: " + T4 + "\nT5: " + T5
+                + "\nT8: " + T8 + "\nT9: " + T9 + "\nT10: " + T10 + "\nT11: " + T11);
         double T = 0.4 * truthValue + 0.075 * T2 + 0.075 * T3 + 0.075 * T4 + 0.075 * T5 + 0.075 * T6 + 0.075 * T7 + 0.075 * T8 + 0.075 * T9 + 0.075 * T10 + 0.075 * T11;
 
-        return new LinguisticSummary("graczy", summarizer, quantifier, qualifier, T);
+        return new LinguisticSummary("graczy", summarizer, quantifier, qualifier, null, T, "Jednopodmiotowe");
     }
 
-    private static List<FuzzySet> extractSummarizers(List<String> summarizers, Map<String, FuzzySet> threePointersMadeTerms) {
-        List<FuzzySet> fuzzySets = new ArrayList<>();
-        for (String summarizer : summarizers) {
-            if (threePointersMadeTerms.containsKey(summarizer)) {
-                fuzzySets.add(threePointersMadeTerms.get(summarizer));
-            }
+    public static LinguisticSummary generateMultiSubjectSummaryFirstForm(
+            List<PlayerStats> players, List<String> summarizers, String quantifier, String position1, String position2) {
+
+        Map<String, List<PlayerStats>> groupedPlayers = PlayerGroupHelper.groupPlayersByPosition(players);
+        List<PlayerStats> playersP1 = groupedPlayers.get(position1);
+        List<PlayerStats> playersP2 = groupedPlayers.get(position2);
+
+        Map<String, FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+        Map<String, FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
+        Map<String, FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
+        FuzzySet quantifierFunction;
+        if (relative.containsKey(quantifier)){
+            quantifierFunction = relative.get(quantifier);
         }
-        return fuzzySets;
+        else {
+            quantifierFunction = absolute.get(quantifier);
+        }
+
+        String summarizer = String.join(" i ", summarizers);
+        double truthValue = QualityMeasures.firsTypeT(playersP1,playersP2,summarizersFuzzySets,quantifierFunction);
+
+        // Zwraca podsumowanie bez obliczania truthValue
+        return new LinguisticSummary(position1, summarizer, quantifier, null, position2, truthValue, "Wielopodmiotowe Pierwsza Forma");
     }
+
+
+    public static LinguisticSummary generateMultiSubjectSummarySecondForm(
+            List<PlayerStats> players, List<String> summarizers, String quantifier, String qualifier, String position1, String position2) {
+
+        Map<String, List<PlayerStats>> groupedPlayers = PlayerGroupHelper.groupPlayersByPosition(players);
+        List<PlayerStats> playersP1 = groupedPlayers.get(position1);
+        List<PlayerStats> playersP2 = groupedPlayers.get(position2);
+
+        Map<String, FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+        Map<String, FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
+        Map<String, FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
+        FuzzySet qualifierFuzzySet = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
+        FuzzySet quantifierFunction;
+        if (relative.containsKey(quantifier)){
+            quantifierFunction = relative.get(quantifier);
+        }
+        else {
+            quantifierFunction = absolute.get(quantifier);
+        }
+
+        String summarizer = String.join(" i ", summarizers);
+        double truthValue = QualityMeasures.secondTypeT(playersP1,playersP2,summarizersFuzzySets,quantifierFunction,qualifierFuzzySet,qualifier);
+
+        return new LinguisticSummary(position1, summarizer, quantifier, qualifier, position2, truthValue, "Wielopodmiotowe Druga Forma");
+    }
+
+    public static LinguisticSummary generateMultiSubjectSummaryThirdForm(
+            List<PlayerStats> players, List<String> summarizers, String quantifier, String position1, String position2, String qualifier) {
+
+        Map<String, List<PlayerStats>> groupedPlayers = PlayerGroupHelper.groupPlayersByPosition(players);
+        List<PlayerStats> playersP1 = groupedPlayers.get(position1);
+        List<PlayerStats> playersP2 = groupedPlayers.get(position2);
+
+        Map<String, FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+        Map<String, FuzzySet> relative = Quantifiers.getRelativeQuantifiers();
+        Map<String, FuzzySet> absolute = Quantifiers.getAbsoluteQuantifiers();
+        FuzzySet qualifierFuzzySet = getFuzzySetsForSummarizers(List.of(qualifier)).get(qualifier);
+        FuzzySet quantifierFunction;
+        if (relative.containsKey(quantifier)){
+            quantifierFunction = relative.get(quantifier);
+        }
+        else {
+            quantifierFunction = absolute.get(quantifier);
+        }
+        String summarizer = String.join(" i ", summarizers);
+
+
+        double truthValue = QualityMeasures.thirdTypeT(playersP1,playersP2,summarizersFuzzySets,quantifierFunction,qualifierFuzzySet,qualifier);
+        return new LinguisticSummary(position1, summarizer, quantifier, qualifier, position2, truthValue, "Wielopodmiotowe Trzecia Forma");
+    }
+
+
+    public static LinguisticSummary generateMultiSubjectSummaryFourthForm(
+            List<PlayerStats> players, List<String> summarizers, String position1, String position2) {
+
+        Map<String, List<PlayerStats>> groupedPlayers = PlayerGroupHelper.groupPlayersByPosition(players);
+        List<PlayerStats> playersP1 = groupedPlayers.get(position1);
+        List<PlayerStats> playersP2 = groupedPlayers.get(position2);
+
+        Map<String, FuzzySet> summarizersFuzzySets = getFuzzySetsForSummarizers(summarizers);
+
+        String summarizer = String.join(" i ", summarizers);
+        double truthValue = QualityMeasures.fourthTypeT(playersP1,playersP2,summarizersFuzzySets);
+
+        // Zwraca podsumowanie bez obliczania truthValue
+        return new LinguisticSummary(position1, summarizer, "Więcej", null, position2, truthValue, "Wielopodmiotowe Czwarta Forma");
+    }
+
+
 }

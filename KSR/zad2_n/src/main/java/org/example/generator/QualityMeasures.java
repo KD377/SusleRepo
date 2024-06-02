@@ -228,4 +228,70 @@ public class QualityMeasures {
     public static double lengthOfQualifier(FuzzySet qualifier) {
         return 2 * (Math.pow(0.5, 1));
     }
+
+    public static double firsTypeT(List<PlayerStats> p1, List<PlayerStats> p2,Map<String,FuzzySet> summarizers,FuzzySet quantifierFunction) {
+        double sum1 = 0;
+        double sum2 = 0;
+        for (String summarizer : summarizers.keySet()) {
+            for (PlayerStats player : p1) {
+                sum1 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+            for (PlayerStats player : p2) {
+                sum2 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+        }
+        sum1 /= p1.size();
+        sum2 /= p2.size();
+        return quantifierFunction.calculateMembership(sum1/(sum1 + sum2));
+    }
+
+    public static double secondTypeT(List<PlayerStats> p1, List<PlayerStats> p2,Map<String,FuzzySet> summarizers,FuzzySet quantifierFunction,FuzzySet qualifier,String qualifierName) {
+        double sum1 = 0;
+        double sum2 = 0;
+        for (String summarizer : summarizers.keySet()) {
+            for (PlayerStats player : p1) {
+                sum1 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+            for (PlayerStats player : p2) {
+                double value = Math.min(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)),qualifier.calculateMembership(getAttribute(qualifierName,player)));
+                sum2 += value;
+            }
+        }
+        sum1 /= p1.size();
+        sum2 /= p2.size();
+        return quantifierFunction.calculateMembership(sum1/(sum1 + sum2));
+    }
+
+    public static double thirdTypeT(List<PlayerStats> p1, List<PlayerStats> p2,Map<String,FuzzySet> summarizers,FuzzySet quantifierFunction,FuzzySet qualifier,String qualifierName) {
+        double sum1 = 0;
+        double sum2 = 0;
+        for (String summarizer : summarizers.keySet()) {
+            for (PlayerStats player : p1) {
+                double value = Math.min(summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player)),qualifier.calculateMembership(getAttribute(qualifierName,player)));
+                sum1 += value;
+            }
+            for (PlayerStats player : p2) {
+                sum2 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+        }
+        sum1 /= p1.size();
+        sum2 /= p2.size();
+        return quantifierFunction.calculateMembership(sum1/(sum1 + sum2));
+    }
+
+    public static double fourthTypeT(List<PlayerStats> p1, List<PlayerStats> p2,Map<String,FuzzySet> summarizers) {
+        double sum1 = 0;
+        double sum2 = 0;
+        for (String summarizer : summarizers.keySet()) {
+            for (PlayerStats player : p1) {
+                sum1 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+            for (PlayerStats player : p2) {
+                sum2 += summarizers.get(summarizer).calculateMembership(getAttribute(summarizer,player));
+            }
+        }
+
+        return sum1/(sum1 + sum2);
+    }
+
 }
