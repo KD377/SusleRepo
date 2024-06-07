@@ -23,13 +23,19 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
+            <version>1.18.32</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version>5.5.2</version>
+            <version>5.8</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -87,6 +93,9 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>org.example.zad2/org.example.zad2.HelloApplication</mainClass>
+                            <options>
+                                <add-modules>java.sql</add-modules>
+                            </options>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

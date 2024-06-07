@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.linguistic.HelloController">
+  <tabs>
+    <Tab text="Podsumowania jednopodmiotowe">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <ChoiceBox fx:id="quantifier" layoutX="31.0" layoutY="43.0" prefWidth="150.0" />
+                  <Label fx:id="summaryLabel" layoutX="24.0" layoutY="474.0" />
+                  <Button fx:id="button" layoutX="37.0" layoutY="416.0" mnemonicParsing="false" onAction="#onHelloButtonClick" text="Generate" />
+                  <ListView fx:id="summarizers" layoutX="31.0" layoutY="104.0" prefHeight="200.0" prefWidth="200.0" />
+                  <ChoiceBox fx:id="qualifier" layoutX="31.0" layoutY="353.0" prefWidth="150.0" />
+                  <TextField fx:id="t1" layoutX="281.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t2" layoutX="324.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t3" layoutX="372.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t4" layoutX="416.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t5" layoutX="462.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t6" layoutX="505.0" layoutY="43.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t7" layoutX="281.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t8" layoutX="325.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t9" layoutX="373.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t10" layoutX="417.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="t11" layoutX="463.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
+                  <TextField fx:id="filePath" layoutX="281.0" layoutY="129.0" />
+                  <Button fx:id="save" layoutX="463.0" layoutY="129.0" mnemonicParsing="false" onAction="#onSaveButtonClick" text="Save" />
+               </children></AnchorPane>
+      </content>
+    </Tab>
+    <Tab text="Podsumowania wielopodmiotowe">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <ChoiceBox fx:id="type" layoutX="27.0" layoutY="37.0" prefWidth="150.0" />
+                  <ChoiceBox fx:id="quantifier1" layoutX="27.0" layoutY="97.0" prefWidth="150.0" />
+                  <ListView fx:id="summarizers1" layoutX="27.0" layoutY="155.0" prefHeight="200.0" prefWidth="200.0" />
+                  <ChoiceBox fx:id="qualifier1" layoutX="27.0" layoutY="397.0" prefWidth="150.0" />
+                  <Button fx:id="button1" layoutX="27.0" layoutY="439.0" mnemonicParsing="false" onAction="#onGenerateButtonClick" text="Generate" />
+                  <Label fx:id="summaryLabel1" layoutX="27.0" layoutY="513.0" />
+                  <ChoiceBox fx:id="p1" layoutX="213.0" layoutY="37.0" prefWidth="150.0" />
+                  <ChoiceBox fx:id="p2" layoutX="400.0" layoutY="37.0" prefWidth="150.0" />
+                  <Button fx:id="save1" layoutX="437.0" layoutY="155.0" mnemonicParsing="false" onAction="#onSaveButton1Click" text="Save" />
+                  <TextField fx:id="filePath1" layoutX="260.0" layoutY="155.0" />
+               </children></AnchorPane>
+      </content>
+    </Tab>
+      <Tab text="Zaawansowane">
+         <content>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <Button fx:id="quantifierButton" layoutX="286.0" layoutY="25.0" mnemonicParsing="false" onAction="#addQuantifier" text="Add" />
+                  <TextField fx:id="quantifierName" layoutX="23.0" layoutY="25.0" prefHeight="25.0" prefWidth="246.0" />
+                  <ChoiceBox fx:id="quantifierType" layoutX="23.0" layoutY="67.0" prefWidth="150.0" />
+                  <ChoiceBox fx:id="membershipQuantifier" layoutX="196.0" layoutY="67.0" prefWidth="150.0" />
+                  <VBox fx:id="inputFieldsContainer" layoutX="23.0" layoutY="110.0" prefHeight="200.0" prefWidth="100.0" />
+                  <Button layoutX="286.0" layoutY="356.0" mnemonicParsing="false" onAction="#addSummarizer" text="Add" />
+                  <TextField fx:id="summarizerName" layoutX="23.0" layoutY="356.0" prefHeight="25.0" prefWidth="246.0" />
+                  <ChoiceBox fx:id="summarizerType" layoutX="23.0" layoutY="400.0" prefWidth="150.0" />
+                  <ChoiceBox fx:id="membershipSummarizer" layoutX="196.0" layoutY="400.0" prefWidth="150.0" />
+                  <VBox fx:id="inputFieldsContainer1" layoutX="394.0" layoutY="356.0" prefHeight="200.0" prefWidth="100.0" />
+               </children>
+            </AnchorPane>
+         </content>
+      </Tab>
+  </tabs>
+</TabPane>
