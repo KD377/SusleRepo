@@ -31,8 +31,6 @@ public class HelloController implements Initializable {
 
     private List<PlayerStats> playerStats;
 
-    @FXML
-    private ChoiceBox<String> quantifier;
 
     @FXML
     private ChoiceBox<String> type;
@@ -43,8 +41,6 @@ public class HelloController implements Initializable {
     @FXML
     private TextField filePath1;
 
-    @FXML
-    private ChoiceBox<String> quantifier1;
 
     @FXML
     private ChoiceBox<String> p1;
@@ -136,10 +132,6 @@ public class HelloController implements Initializable {
         CsvReader csvReader = new CsvReader();
         try {
             playerStats = csvReader.readCsv("src/main/resources/NBA_Player_Stats.csv");
-            Set<String> quantifiers = new HashSet<>(Quantifiers.getRelativeQuantifiers().keySet());
-            quantifier1.getItems().addAll(quantifiers);
-            quantifiers.addAll(Quantifiers.getAbsoluteQuantifiers().keySet());
-            quantifier.getItems().addAll(quantifiers);
             summarizers.setItems(FXCollections.observableArrayList(
                     Terms.getAllTerms()));
             summarizers1.setItems(FXCollections.observableArrayList(
@@ -226,48 +218,98 @@ public class HelloController implements Initializable {
 
     @FXML
     private void onHelloButtonClick() {
-        List<String> sumamrizers = this.summarizers.getSelectionModel().getSelectedItems();
-        String quantifier = this.quantifier.getValue();
+        List<String> summarizers = this.summarizers.getSelectionModel().getSelectedItems();
         String qualifier = this.qualifier.getValue();
         if (qualifier.equals("null")) {
             qualifier = null;
         }
-        System.out.println(qualifier);
-        LinguisticSummary summary = SummaryGenerator.generateSummary(playerStats, sumamrizers, quantifier, qualifier, weights);
-        summaryLabel.setText(summary.toString());
+
+        List<LinguisticSummary> summariesList = new ArrayList<>();
+        Set<String> relativeQuantifiers = Quantifiers.getRelativeQuantifiers().keySet();
+        Set<String> absoluteQuantifiers = Quantifiers.getAbsoluteQuantifiers().keySet();
+
+        if (qualifier != null) {
+            for (String quantifier : relativeQuantifiers) {
+                LinguisticSummary summary = SummaryGenerator.generateSummary(playerStats, summarizers, quantifier, null, weights);
+                summariesList.add(summary);
+            }
+        } else {
+            for (String quantifier : relativeQuantifiers) {
+                LinguisticSummary summary = SummaryGenerator.generateSummary(playerStats, summarizers, quantifier, qualifier, weights);
+                summariesList.add(summary);
+            }
+            for (String quantifier : absoluteQuantifiers) {
+                LinguisticSummary summary = SummaryGenerator.generateSummary(playerStats, summarizers, quantifier, qualifier, weights);
+                summariesList.add(summary);
+            }
+        }
+
+        // Sort summaries by truth value in descending order
+        summariesList.sort(Comparator.comparingDouble(LinguisticSummary::getTruthValue).reversed());
+
+        // Build the final summary string
+        StringBuilder summaries = new StringBuilder();
+        for (LinguisticSummary summary : summariesList) {
+            summaries.append(summary).append("\n\n"); // Append summary and an additional empty line
+        }
+
+        summaryLabel.setText(summaries.toString());
     }
+
 
     @FXML
     private void onGenerateButtonClick() {
+        List<LinguisticSummary> summariesList = new ArrayList<>();
+        Set<String> relativeQuantifiers = Quantifiers.getRelativeQuantifiers().keySet();
+
         switch (type.getValue()) {
             case "Pierwsza forma":
                 if (!p1.getValue().equals(p2.getValue())) {
-                    LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummaryFirstForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), this.quantifier1.getValue(), p1.getValue(), p2.getValue());
-                    summaryLabel1.setText(summary.toString());
+                    for (String quantifier : relativeQuantifiers) {
+                        LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummaryFirstForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), quantifier, p1.getValue(), p2.getValue());
+                        summariesList.add(summary);
+                    }
                 }
                 break;
             case "Druga forma":
                 if (!p1.getValue().equals(p2.getValue()) && qualifier1.getValue() != null) {
-                    LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummarySecondForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), this.quantifier1.getValue(), qualifier1.getValue(), p1.getValue(), p2.getValue());
-                    summaryLabel1.setText(summary.toString());
+                    for (String quantifier : relativeQuantifiers) {
+                        LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummarySecondForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), quantifier, qualifier1.getValue(), p1.getValue(), p2.getValue());
+                        summariesList.add(summary);
+                    }
                 }
                 break;
             case "Trzecia forma":
                 if (!p1.getValue().equals(p2.getValue()) && qualifier1.getValue() != null) {
-                    LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummaryThirdForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), this.quantifier1.getValue(), p1.getValue(), p2.getValue(), qualifier1.getValue());
-                    summaryLabel1.setText(summary.toString());
+                    for (String quantifier : relativeQuantifiers) {
+                        LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummaryThirdForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), quantifier, p1.getValue(), p2.getValue(), qualifier1.getValue());
+                        summariesList.add(summary);
+                    }
                 }
                 break;
             case "Czwarta forma":
                 if (!p1.getValue().equals(p2.getValue())) {
                     LinguisticSummary summary = SummaryGenerator.generateMultiSubjectSummaryFourthForm(playerStats, this.summarizers1.getSelectionModel().getSelectedItems(), p1.getValue(), p2.getValue());
-                    summaryLabel1.setText(summary.toString());
+                    summariesList.add(summary);
+
                 }
                 break;
             default:
                 System.out.println("Error");
         }
+
+        // Sort summaries by truth value in descending order
+        summariesList.sort(Comparator.comparingDouble(LinguisticSummary::getTruthValue).reversed());
+
+        // Build the final summary string
+        StringBuilder summaries = new StringBuilder();
+        for (LinguisticSummary summary : summariesList) {
+            summaries.append(summary).append("\n\n"); // Append summary and an additional empty line
+        }
+
+        summaryLabel1.setText(summaries.toString());
     }
+
 
     @FXML
     private void onSaveButtonClick() {
@@ -310,12 +352,8 @@ public class HelloController implements Initializable {
 
             if (type.equals("względny")) {
                 Quantifiers.addRelativeQuantifier(name, fuzzySet);
-                quantifier.getItems().add(name);
-                quantifier1.getItems().add(name);
             } else if (type.equals("absolutny")) {
                 Quantifiers.addAbsoluteQuantifier(name, fuzzySet);
-                quantifier.getItems().add(name);
-                quantifier1.getItems().add(name);
             }
         }
     }

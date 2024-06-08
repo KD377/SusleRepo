@@ -9,6 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.linguistic.HelloController">
   <tabs>
@@ -16,8 +17,10 @@
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
-                  <ChoiceBox fx:id="quantifier" layoutX="31.0" layoutY="43.0" prefWidth="150.0" />
-                  <Label fx:id="summaryLabel" layoutX="24.0" layoutY="474.0" />
+                  <Label fx:id="summaryLabel" layoutX="250.0" layoutY="115.0" prefHeight="445.0" prefWidth="509.0">
+                     <font>
+                        <Font size="15.0" />
+                     </font></Label>
                   <Button fx:id="button" layoutX="37.0" layoutY="416.0" mnemonicParsing="false" onAction="#onHelloButtonClick" text="Generate" />
                   <ListView fx:id="summarizers" layoutX="31.0" layoutY="104.0" prefHeight="200.0" prefWidth="200.0" />
                   <ChoiceBox fx:id="qualifier" layoutX="31.0" layoutY="353.0" prefWidth="150.0" />
@@ -32,8 +35,8 @@
                   <TextField fx:id="t9" layoutX="373.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
                   <TextField fx:id="t10" layoutX="417.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
                   <TextField fx:id="t11" layoutX="463.0" layoutY="78.0" prefHeight="26.0" prefWidth="42.0" />
-                  <TextField fx:id="filePath" layoutX="281.0" layoutY="129.0" />
-                  <Button fx:id="save" layoutX="463.0" layoutY="129.0" mnemonicParsing="false" onAction="#onSaveButtonClick" text="Save" />
+                  <TextField fx:id="filePath" layoutX="37.0" layoutY="30.0" />
+                  <Button fx:id="save" layoutX="152.0" layoutY="65.0" mnemonicParsing="false" onAction="#onSaveButtonClick" text="Save" />
                </children></AnchorPane>
       </content>
     </Tab>
@@ -42,15 +45,14 @@
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
                   <ChoiceBox fx:id="type" layoutX="27.0" layoutY="37.0" prefWidth="150.0" />
-                  <ChoiceBox fx:id="quantifier1" layoutX="27.0" layoutY="97.0" prefWidth="150.0" />
-                  <ListView fx:id="summarizers1" layoutX="27.0" layoutY="155.0" prefHeight="200.0" prefWidth="200.0" />
-                  <ChoiceBox fx:id="qualifier1" layoutX="27.0" layoutY="397.0" prefWidth="150.0" />
-                  <Button fx:id="button1" layoutX="27.0" layoutY="439.0" mnemonicParsing="false" onAction="#onGenerateButtonClick" text="Generate" />
-                  <Label fx:id="summaryLabel1" layoutX="27.0" layoutY="513.0" />
+                  <ListView fx:id="summarizers1" layoutX="27.0" layoutY="81.0" prefHeight="200.0" prefWidth="200.0" />
+                  <ChoiceBox fx:id="qualifier1" layoutX="27.0" layoutY="293.0" prefWidth="150.0" />
+                  <Button fx:id="button1" layoutX="27.0" layoutY="335.0" mnemonicParsing="false" onAction="#onGenerateButtonClick" text="Generate" />
+                  <Label fx:id="summaryLabel1" wrapText="true" layoutX="238.0" layoutY="134.0" prefHeight="418.0" prefWidth="553.0" />
                   <ChoiceBox fx:id="p1" layoutX="213.0" layoutY="37.0" prefWidth="150.0" />
                   <ChoiceBox fx:id="p2" layoutX="400.0" layoutY="37.0" prefWidth="150.0" />
-                  <Button fx:id="save1" layoutX="437.0" layoutY="155.0" mnemonicParsing="false" onAction="#onSaveButton1Click" text="Save" />
-                  <TextField fx:id="filePath1" layoutX="260.0" layoutY="155.0" />
+                  <Button fx:id="save1" layoutX="420.0" layoutY="81.0" mnemonicParsing="false" onAction="#onSaveButton1Click" text="Save" />
+                  <TextField fx:id="filePath1" layoutX="251.0" layoutY="81.0" />
                </children></AnchorPane>
       </content>
     </Tab>
